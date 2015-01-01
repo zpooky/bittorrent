@@ -23,14 +23,7 @@ object TorrentFileStream {
     val channel = FileChannel.open(torrent.toPath, StandardOpenOption.READ)
     new TorrentFileStream(channel,channel.map(MapMode.READ_ONLY, 0, channel.size).load)
   }
-  def main(args: Array[String]): Unit = {
-    val url = getClass.getResource("/debian.torrent")
-    val file = new File(url.toURI())
-    var parser = TorrentFileStream(file)
-    val d = Bencode.decode(parser)
-    println(d)
-    parser.close
-  }
+
     def printBinary(b1: Byte) = {
       String.format("%8s", Integer.toBinaryString(b1 & 0xFF)).replace(' ', '0');
   }

@@ -7,7 +7,11 @@ abstract class BValue
 case class BString(value: String) extends BValue
 case class BInteger(value: Long) extends BValue
 case class BList(value: List[BValue]) extends BValue
-case class BDictionary(value: List[Tuple2[BString, BValue]]) extends BValue
+case class BDictionary(value: List[Tuple2[BString, BValue]]) extends BValue {
+  def get(search: String):Option[BValue] = {
+    value.find{case (key,_) => key.value.equals(search)}.map(_._2)   
+  }
+}
 case class BChecksum(value: Array[Byte]) extends BValue
 
 object Bencode {
