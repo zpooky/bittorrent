@@ -1,3 +1,3 @@
 package com.spooky.bittorrent.peer
 
-case class Peer
+case class Peer(ip:String,port:Int)
