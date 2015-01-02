@@ -83,7 +83,7 @@ object Bencode {
   def decodeString(stream: BStream): Tuple2[BStream, BString] = {
     @tailrec
     def decode(stream: BStream, length: Int, builder: StringBuilder): Tuple2[BStream, BString] = stream match {
-      case strean if length == 0    ⇒ (stream, BString(builder.toString))
+      case stream if length == 0    ⇒ (stream, BString(builder.toString))
       case stream if stream.isEmpty ⇒ throw new RuntimeException("stream is empty: " + builder.toString)
       case c %:: tail               ⇒ decode(tail, length - 1, builder.append(c))
     }

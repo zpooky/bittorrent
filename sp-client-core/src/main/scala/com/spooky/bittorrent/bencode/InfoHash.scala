@@ -47,7 +47,7 @@ object InfoHash {
   def decodeString(stream: BStream, builder: BytesBuilder): Tuple2[BStream, BytesBuilder] = {
     @tailrec
     def decode(stream: BStream, length: Int, builder: BytesBuilder): Tuple2[BStream, BytesBuilder] = stream match {
-      case strean if length == 0    ⇒ (stream, builder)
+      case stream if length == 0    ⇒ (stream, builder)
       case stream if stream.isEmpty ⇒ throw new RuntimeException("unexpected end of stream")
       case c %:: tail               ⇒ decode(tail, length - 1, builder += stream.headByte)
     }
@@ -63,7 +63,7 @@ object InfoHash {
   }
 
   private def doDecode(stream: BStream, builder: BytesBuilder): Tuple2[BStream, BytesBuilder] = stream match {
-    case 'i' %:: _            ⇒ decodeInteger(stream, builder += stream.headByte)
+    case 'i' %:: _            ⇒ decodeInteger(stream, builder)
     case 'l' %:: tail         ⇒ decodeList(tail, builder += stream.headByte)
     case 'd' %:: tail         ⇒ decodeDictionary(tail, builder += stream.headByte)
     case c %:: _ if c.isDigit ⇒ decodeString(stream, builder)
@@ -86,7 +86,7 @@ object InfoHash {
     def decode(stream: BStream, builder: BytesBuilder): Tuple2[BStream, BytesBuilder] = stream match {
       case 'e' %:: tail ⇒ (tail, builder += stream.headByte)
       case stream ⇒ {
-        val result = doDecode(stream,builder)
+        val result = doDecode(stream, builder)
         decode(result._1, result._2)
       }
     }

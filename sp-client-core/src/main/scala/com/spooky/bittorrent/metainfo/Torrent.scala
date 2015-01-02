@@ -16,6 +16,10 @@ import com.spooky.bittorrent.bencode.BDictionary
 import com.spooky.bittorrent.bencode.BList
 import scala.annotation.tailrec
 import com.spooky.bittorrent.bencode.InfoHash
+import java.util.Base64
+import java.net.URLEncoder
+import org.apache.commons.codec.net.URLCodec
+import java.nio.charset.Charset
 
 abstract class Algorithm {
   override def toString = this.getClass.getSimpleName.replace("$", "")
@@ -125,7 +129,10 @@ object Torrent {
   def main(args: Array[String]): Unit = {
     val url = getClass.getResource("/debian.torrent")
     val file = new File(url.toURI())
-    Torrent(new File("D:\\torrent\\[kickass.so]the.wire.s03.720p.hdtv.x264.batv.rartv.torrent"))
-    new File("D:\\torrent\\").listFiles().filter { x ⇒ x.isFile() }.filter { x ⇒ x.getName.endsWith(".torrent") }.foreach { x ⇒ Torrent(x) }
+    val t = Torrent(new File("D:\\torrent\\Community.S05E01.HDTV.x264-LOL.mp4.torrent"))
+    println(Base64.getEncoder.encodeToString(t.infoHash.sum))
+    val codec = new URLCodec
+    println(new String(codec.encode(t.infoHash.sum),Charset.forName("ASCII")))
+//    new File("D:\\torrent\\").listFiles().filter { x ⇒ x.isFile() }.filter { x ⇒ x.getName.endsWith(".torrent") }.foreach { x ⇒ Torrent(x) }
   }
 }
