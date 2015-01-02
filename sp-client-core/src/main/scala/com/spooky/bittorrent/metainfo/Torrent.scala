@@ -15,6 +15,7 @@ import com.spooky.bittorrent.bencode.BDictionary
 import com.spooky.bittorrent.bencode.BDictionary
 import com.spooky.bittorrent.bencode.BList
 import scala.annotation.tailrec
+import com.spooky.bittorrent.bencode.InfoHash
 
 abstract class Algorithm {
   override def toString = this.getClass.getSimpleName.replace("$", "")
@@ -26,23 +27,24 @@ case class Info(pieceLength: Int, length: Long, files: List[TorrentFile], pieces
 case class Node(host: String, port: Int)
 case class Tracker(announce: String)
 case class TorrentFile(name: String, bytes: Long)
-case class Torrent(info: Info, nodes: List[Node], trackers: Set[Tracker], creationDate: Option[String], comment: Option[String], createdBy: Option[String], encoding: Option[String], httpSeeds: List[URL]) //extends Metainfo
+case class Torrent(infoHash: Checksum,info: Info, nodes: List[Node], trackers: Set[Tracker], creationDate: Option[String], comment: Option[String], createdBy: Option[String], encoding: Option[String], httpSeeds: List[URL]) //extends Metainfo
 object Torrent {
   def apply(torrent: File): Torrent = {
     val stream = TorrentFileStream(torrent)
 		println(torrent)
     println(stream.toString)
     val dictionary = Bencode.decode(stream)
-    //    println(dictionary)
+    val infoHash = InfoHash.hash(stream)
+//    println(dictionary)
     stream.close
     val torrentData = dictionary match {
       case (metaInfo: BDictionary) ⇒ {
         val infos = info(metaInfo.get("info").map(_.asInstanceOf[BDictionary]).get)
-        Torrent(info = infos, nodes = nodes(metaInfo), trackers = announce(metaInfo), creationDate = creationDate(metaInfo), comment = comment(metaInfo), createdBy = createdBy(metaInfo), encoding = encoding(metaInfo), httpSeeds = httpSeeds(metaInfo))
+        Torrent(infoHash = infoHash,info = infos, nodes = nodes(metaInfo), trackers = announce(metaInfo), creationDate = creationDate(metaInfo), comment = comment(metaInfo), createdBy = createdBy(metaInfo), encoding = encoding(metaInfo), httpSeeds = httpSeeds(metaInfo))
       }
       case _ ⇒ throw new RuntimeException
     }
-//    println(torrentData)
+    println(torrentData)
     torrentData
   }
 
@@ -50,7 +52,6 @@ object Torrent {
     val root = metaInfo.get("name").map({ case (value: BString) ⇒ value.value }).getOrElse("")
     val pieceLength = metaInfo.get("piece length").map { case (value: BInteger) ⇒ value.value }.map(_.toInt).getOrElse(0)
     val optionalLength = metaInfo.get("length").map { case (value: BInteger) ⇒ value.value }
-    //TODO will fail if list is reversed
     val priv = metaInfo.get("private").map { case (value: BInteger) ⇒ value.value }.map(_ == 1l).getOrElse(false)
     val fileList = files(metaInfo, root, optionalLength)
     val length = optionalLength.getOrElse(fileList.foldLeft(0l)((first, current) ⇒ first + current.bytes))
@@ -124,7 +125,7 @@ object Torrent {
   def main(args: Array[String]): Unit = {
     val url = getClass.getResource("/debian.torrent")
     val file = new File(url.toURI())
-    Torrent(new File("D:\\torrent\\[kickass.so]the.maze.runner.2014.truefrench.bdrip.xvid.glups.torrent"))
+    Torrent(new File("D:\\torrent\\[kickass.so]the.wire.s03.720p.hdtv.x264.batv.rartv.torrent"))
     new File("D:\\torrent\\").listFiles().filter { x ⇒ x.isFile() }.filter { x ⇒ x.getName.endsWith(".torrent") }.foreach { x ⇒ Torrent(x) }
   }
 }

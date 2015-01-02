@@ -1,7 +1,5 @@
 package com.spooky.bittorrent.bencode
 
-import com.spooky.bittorrent.metainfo.TorrentFileStream
-
 object wtf {
 
 	object %:: {

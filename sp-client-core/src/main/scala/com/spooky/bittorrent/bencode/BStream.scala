@@ -9,7 +9,7 @@ trait BStream {
 
 class StringBStream(string:String) extends BStream {
   def headChar = string.head
-  def headByte: Byte = 0
+  def headByte: Byte = throw new RuntimeException("not supported")
   def tail: BStream = new StringBStream(string.tail)
   def isEmpty: Boolean = string.isEmpty
 }

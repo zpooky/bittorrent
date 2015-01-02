@@ -3,17 +3,29 @@ package com.spooky.bittorrent.bencode
 import scala.annotation.tailrec
 import com.spooky.bittorrent.bencode.wtf._
 
-abstract class BValue
-case class BString(value: String) extends BValue
-case class BInteger(value: Long) extends BValue
-//TODO fix list to not reverse applies also to checksum list
-case class BList(value: List[BValue]) extends BValue
+abstract class BValue {
+  def toBencode: String
+}
+case class BString(value: String) extends BValue {
+  override def toBencode = value.length + ":" + value
+}
+case class BInteger(value: Long) extends BValue {
+  override def toBencode = "i" + value + "e"
+}
+case class BList(value: List[BValue]) extends BValue {
+  override def toBencode = value.foldLeft(StringBuilder.newBuilder.append("l"))((first, current) ⇒ first.append(current.toBencode)).toString + "e"
+}
 case class BDictionary(value: List[Tuple2[BString, BValue]]) extends BValue {
   def get(search: String): Option[BValue] = {
     value.find { case (key, _) ⇒ key.value.equals(search) }.map(_._2)
   }
+  //TODO need to sort list according to spec
+  override def toBencode = value.foldLeft(StringBuilder.newBuilder.append("d"))((previous, current) ⇒ previous.append(current._1.toBencode).append(current._2.toBencode)).toString + "e"
 }
-case class BChecksum(value: Array[Byte]) extends BValue
+case class BChecksum(value: Array[Byte]) extends BValue {
+  //TODO
+  override def toBencode = "???"
+}
 
 object Bencode {
 
@@ -24,12 +36,12 @@ object Bencode {
     doDecode(stream)._2
   }
 
-  private def doDecode(stream: BStream): Tuple2[BStream, BValue] = stream match {
+  def doDecode(stream: BStream): Tuple2[BStream, BValue] = stream match {
     case 'i' %:: _            ⇒ decodeInteger(stream)
     case 'l' %:: tail         ⇒ decodeList(tail)
     case 'd' %:: tail         ⇒ decodeDictionary(tail)
     case c %:: _ if c.isDigit ⇒ decodeString(stream)
-    case _                    ⇒ null
+    case _                    ⇒ throw new RuntimeException("Unknown type")
   }
 
   private def decodeInteger(stream: BStream): Tuple2[BStream, BInteger] = {
@@ -46,7 +58,7 @@ object Bencode {
   private def decodeList(stream: BStream): Tuple2[BStream, BList] = {
     @tailrec
     def decode(stream: BStream, list: List[BValue]): Tuple2[BStream, BList] = stream match {
-      case 'e' %:: tail ⇒ (tail, BList(list))
+      case 'e' %:: tail ⇒ (tail, BList(list.reverse))
       case stream ⇒ {
         val result = doDecode(stream)
         decode(result._1, result._2 :: list)
@@ -54,7 +66,7 @@ object Bencode {
     }
     decode(stream, List())
   }
-  private def decodeDictionary(stream: BStream): Tuple2[BStream, BDictionary] = {
+  def decodeDictionary(stream: BStream): Tuple2[BStream, BDictionary] = {
     @tailrec
     def decode(stream: BStream, list: List[Tuple2[BString, BValue]]): Tuple2[BStream, BDictionary] = stream match {
       case stream if stream.isEmpty ⇒ throw new RuntimeException("stream is empty")
@@ -68,7 +80,7 @@ object Bencode {
     decode(stream, List())
   }
 
-  private def decodeString(stream: BStream): Tuple2[BStream, BString] = {
+  def decodeString(stream: BStream): Tuple2[BStream, BString] = {
     @tailrec
     def decode(stream: BStream, length: Int, builder: StringBuilder): Tuple2[BStream, BString] = stream match {
       case strean if length == 0    ⇒ (stream, BString(builder.toString))
@@ -98,7 +110,7 @@ object Bencode {
       }
     }
     val decoded = decode(length._1, length._2, Nil)
-    (decoded._1, BList(decoded._2))
+    (decoded._1, BList(decoded._2.reverse))
   }
   @tailrec
   private def getLength(stream: BStream, builder: StringBuilder): Tuple2[BStream, Int] = stream match {
