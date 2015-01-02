@@ -6,6 +6,7 @@ import com.spooky.bittorrent.bencode.wtf._
 abstract class BValue
 case class BString(value: String) extends BValue
 case class BInteger(value: Long) extends BValue
+//TODO fix list to not reverse applies also to checksum list
 case class BList(value: List[BValue]) extends BValue
 case class BDictionary(value: List[Tuple2[BString, BValue]]) extends BValue {
   def get(search: String):Option[BValue] = {
