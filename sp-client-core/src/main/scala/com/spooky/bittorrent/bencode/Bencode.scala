@@ -32,6 +32,11 @@ object Bencode {
   def decode(stream: String): BValue = {
     doDecode(new StringBStream(stream))._2
   }
+  
+  def decode(stream: Array[Byte]): BValue = {
+		  doDecode(new ByteBStream(stream,0))._2
+  }
+  
   def decode(stream: BStream): BValue = {
     doDecode(stream)._2
   }

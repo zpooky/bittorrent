@@ -13,3 +13,10 @@ class StringBStream(string:String) extends BStream {
   def tail: BStream = new StringBStream(string.tail)
   def isEmpty: Boolean = string.isEmpty
 }
+
+class ByteBStream(bytes: Array[Byte],index:Int) extends BStream {
+  def headChar = headByte.asInstanceOf[Char]
+  def headByte: Byte = bytes(index)
+  def tail: BStream = new ByteBStream(bytes,index+1)
+  def isEmpty: Boolean = index >= bytes.length
+}

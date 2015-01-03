@@ -31,7 +31,7 @@ case class Info(pieceLength: Int, length: Long, files: List[TorrentFile], pieces
 case class Node(host: String, port: Int)
 case class Tracker(announce: String)
 case class TorrentFile(name: String, bytes: Long)
-case class Torrent(infoHash: Checksum,info: Info, nodes: List[Node], trackers: Set[Tracker], creationDate: Option[String], comment: Option[String], createdBy: Option[String], encoding: Option[String], httpSeeds: List[URL]) //extends Metainfo
+case class Torrent(infoHash: Checksum,info: Info, nodes: List[Node], trackers: Set[Tracker], creationDate: Option[String], comment: Option[String], createdBy: Option[String], encoding: Option[String], httpSeeds: List[URL]) extends Metainfo
 object Torrent {
   def apply(torrent: File): Torrent = {
     val stream = TorrentFileStream(torrent)
