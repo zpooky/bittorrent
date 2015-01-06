@@ -13,21 +13,33 @@ import spray.httpx.unmarshalling._
 import com.spooky.bittorrent.bencode.Bencode
 import akka.actor.ActorSystem
 import scala.concurrent.ExecutionContext
-import spray.http.MediaRanges._
 import com.spooky.bittorrent.actors.BittorrentActors
 import spray.httpx.UnsuccessfulResponseException
 import scala.concurrent.duration._
 import akka.util.Timeout
+import com.spooky.bittorrent.model.TorrentStatistics
+import java.net.URL
+import spray.http.Uri
+import org.apache.commons.codec.net.URLCodec
+import java.nio.charset.Charset
+import java.util.Base64
+import spray.http.Uri.ParsingMode
+import spray.http.MediaTypes
+import spray.http.MediaRanges
+import com.spooky.bittorrent.model.TorrentConfiguration
+import com.spooky.bittorrent.Config
 
 class TrackerManager(tracker: Tracker)(implicit context: ExecutionContext, actorSystem: ActorSystem, actors: BittorrentActors) {
-  def announceEvent(info: Checksum)(implicit id: PeerId) {
+  def announceEvent(statistics: TorrentStatistics)(implicit id: PeerId) {
     val requestTimeout = Timeout(1 millisecond)
-    println("|" + tracker.announce)
     val pipeline = announcePipeline
     actors.announce ! Announcing(tracker)
-    val result = pipeline(Get(tracker.announce))
+    val config = TorrentConfiguration(2555, 200)
+    println(url(tracker.announce, config, statistics, id))
+    val result = pipeline(Get(url(tracker.announce, config, statistics, id)))
     result.onSuccess({
-      case (r: Announced) ⇒ actors.announce ! r.copy(tracker = Some(tracker))
+      case (r: SuccessAnnounced) ⇒ actors.announce ! r.copy(tracker = Some(tracker))
+      case (r: FailureAnnounced) ⇒ actors.announce ! r.copy(tracker = Some(tracker))
     })
     result.onFailure({
       case (e: UnsuccessfulResponseException)                   ⇒ actors.announce ! ErrorResponse(e.getLocalizedMessage, 3 minutes, tracker)
@@ -36,11 +48,29 @@ class TrackerManager(tracker: Tracker)(implicit context: ExecutionContext, actor
     })
   }
 
+  private def url(url: String, configuration: TorrentConfiguration, statistics: TorrentStatistics, id: PeerId) = {
+    val codec = new URLCodec
+    val ascii = Charset.forName("ASCII")
+    val encoder = Base64.getEncoder()
+    val infoHash = new String(codec.encode(statistics.infoHash.sum), ascii)
+    val peerId = id.id
+    val key = "ss"
+    val builder = StringBuilder.newBuilder
+    builder ++= s"info_hash=${infoHash}&peer_id=${peerId}&no_peer_id=0&event=started&port=${Config.peerWireProtocolPort}&"
+    builder ++= s"uploaded=${statistics.uploaded}&downloaded=${statistics.downloaded}&left=${statistics.left}&"
+    builder ++= s"corrupt=${statistics.corrupt}&key=${key}&numwant=${configuration.numwant}&compact=1"
+    val query = Uri.Query.apply(builder.toString, ascii, ParsingMode.RelaxedWithRawQuery)
+    Uri(url).withQuery(query)
+  }
+
   private implicit def AnnounceResponseUnmarshaller =
-    Unmarshaller[Announced](`text/*`) {
+    Unmarshaller[Announced](MediaRanges.`*/*`) {
       case HttpEntity.NonEmpty(_, data) ⇒ {
-        Announced(Bencode.decode(data.toByteArray))
+        val b = Bencode.decode(data.toByteArray)
+        println(b)
+        Announced(b)
       }
+      case e => println(e); null
     }
 
   private def announcePipeline: HttpRequest ⇒ Future[Announced] = (

@@ -1,5 +1,6 @@
 apply plugin: 'scala'
 apply plugin: 'eclipse'
+apply plugin:'application'
 
 // In this section you declare where to find the dependencies of your project
 repositories {
@@ -22,4 +23,12 @@ dependencies {
     // testCompile dependency to testCompile 'org.testng:testng:6.8.1' and add
     // 'test.useTestNG()' to your build script.
     testCompile 'org.scalatest:scalatest_2.11:2.2.3'
+}
+
+mainClassName = "com.spooky.bittorrent.BittorrentClient"
+
+jar {
+    manifest {
+        attributes 'Main-Class': mainClassName
+    }
 }

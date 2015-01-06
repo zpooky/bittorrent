@@ -1,6 +1,7 @@
 package com.spooky.bittorrent.peer
 
 import com.spooky.bittorrent.metainfo.Metainfo
+import com.spooky.bittorrent.model.Peer
 
 class CompositePeerProvider {
 	def get(count: Int): List[Peer] = null

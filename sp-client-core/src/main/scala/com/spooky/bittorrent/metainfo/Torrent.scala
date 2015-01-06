@@ -35,8 +35,8 @@ case class Torrent(infoHash: Checksum,info: Info, nodes: List[Node], trackers: S
 object Torrent {
   def apply(torrent: File): Torrent = {
     val stream = TorrentFileStream(torrent)
-		println(torrent)
-    println(stream.toString)
+//		println(torrent)
+//    println(stream.toString)
     val dictionary = Bencode.decode(stream)
     val infoHash = InfoHash.hash(stream)
 //    println(dictionary)
@@ -48,7 +48,7 @@ object Torrent {
       }
       case _ ⇒ throw new RuntimeException
     }
-    println(torrentData)
+//    println(torrentData)
     torrentData
   }
 
@@ -130,9 +130,13 @@ object Torrent {
     val url = getClass.getResource("/debian.torrent")
     val file = new File(url.toURI())
     val t = Torrent(new File("D:\\torrent\\Community.S05E01.HDTV.x264-LOL.mp4.torrent"))
-    println(Base64.getEncoder.encodeToString(t.infoHash.sum))
+//    println(Base64.getEncoder.encodeToString(t.infoHash.sum))
+    println("%40%CA%3F%3E%28%EA_%89%F3%29qv%D7%813%08R%9E%12%1A")
     val codec = new URLCodec
     println(new String(codec.encode(t.infoHash.sum),Charset.forName("ASCII")))
+    println(codec.encode(new String(t.infoHash.sum,Charset.forName("UTF8"))))
+    println(codec.encode(new String(t.infoHash.sum,Charset.forName("ASCII"))))
+    println(codec.encode(new String(t.infoHash.sum,Charset.forName("UTF16"))))
 //    new File("D:\\torrent\\").listFiles().filter { x ⇒ x.isFile() }.filter { x ⇒ x.getName.endsWith(".torrent") }.foreach { x ⇒ Torrent(x) }
   }
 }
