@@ -1,6 +1,6 @@
 package com.spooky.bittorrent
 
 object Config {
-  val hostname = "*.*.*.*"
-  val peerWireProtocolPort: Short = 25555;
+  val hostname = "0.0.0.0"
+  val peerWireProtocolPort = 25555
 }

@@ -1,4 +1,4 @@
-package com.spooky.bittorrent.peer.tracker
+package com.spooky.bittorrent.protocol.server.tracker
 
 import com.spooky.bittorrent.metainfo.Tracker
 import com.spooky.bittorrent.model.PeerId
@@ -38,13 +38,13 @@ class TrackerManager(tracker: Tracker)(implicit context: ExecutionContext, actor
     println(url(tracker.announce, config, statistics, id))
     val result = pipeline(Get(url(tracker.announce, config, statistics, id)))
     result.onSuccess({
-      case (r: SuccessAnnounced) ⇒ actors.announce ! r.copy(tracker = Some(tracker))
-      case (r: FailureAnnounced) ⇒ actors.announce ! r.copy(tracker = Some(tracker))
+      case (r: SuccessAnnounced) => actors.announce ! r.copy(tracker = Some(tracker))
+      case (r: FailureAnnounced) => actors.announce ! r.copy(tracker = Some(tracker))
     })
     result.onFailure({
-      case (e: UnsuccessfulResponseException)                   ⇒ actors.announce ! ErrorResponse(e.getLocalizedMessage, 3 minutes, tracker)
-      case (e: spray.can.Http.ConnectionAttemptFailedException) ⇒ actors.announce ! ErrorResponse(e.getLocalizedMessage, 1 hour, tracker)
-      case (e: Exception)                                       ⇒ e.printStackTrace
+      case (e: UnsuccessfulResponseException)                   => actors.announce ! ErrorResponse(e.getLocalizedMessage, 3 minutes, tracker)
+      case (e: spray.can.Http.ConnectionAttemptFailedException) => actors.announce ! ErrorResponse(e.getLocalizedMessage, 1 hour, tracker)
+      case (e: Exception)                                       => e.printStackTrace
     })
   }
 
@@ -65,15 +65,21 @@ class TrackerManager(tracker: Tracker)(implicit context: ExecutionContext, actor
 
   private implicit def AnnounceResponseUnmarshaller =
     Unmarshaller[Announced](MediaRanges.`*/*`) {
-      case HttpEntity.NonEmpty(_, data) ⇒ {
-        val b = Bencode.decode(data.toByteArray)
-        println(b)
-        Announced(b)
+      case HttpEntity.NonEmpty(_, data) => {
+        val a = try {
+          val b = Bencode.decode(data.toByteArray)
+          println(b)
+          Announced(b)
+        } catch {
+          case e: Exception => e.printStackTrace; throw e
+        }
+        println("__::::::::::::::" + a)
+        a
       }
       case e => println(e); null
     }
 
-  private def announcePipeline: HttpRequest ⇒ Future[Announced] = (
+  private def announcePipeline: HttpRequest => Future[Announced] = (
     addHeader("User-Agent", SpookyBittorrent.userAgent)
     ~> sendReceive
     ~> unmarshal[Announced])

@@ -1,4 +1,4 @@
-package com.spooky.bittorrent.peer
+package com.spooky.bittorrent.protocol.server
 
 import com.spooky.bittorrent.metainfo.Metainfo
 import com.spooky.bittorrent.model.Peer

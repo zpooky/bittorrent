@@ -1,4 +1,4 @@
-package com.spooky.bittorrent.peer.tracker
+package com.spooky.bittorrent.protocol.server.tracker
 
 import com.spooky.bittorrent.metainfo.Checksum
 import com.spooky.bittorrent.bencode.BValue
@@ -44,29 +44,29 @@ case class SuccessAnnounced(warningMessage: Option[String],
 case class FailureAnnounced(reason: String, dateTime: LocalDateTime = LocalDateTime.now, tracker: Option[Tracker] = None) extends Announced(dateTime, tracker)
 object Announced {
   def apply(value: BValue): Announced = value match {
-    case (dict: BDictionary) ⇒ {
+    case (dict: BDictionary) => {
       val oFailure = dict.get("failure reason")
       if (oFailure.isDefined) {
-        FailureAnnounced(oFailure.map { case (s: BString) ⇒ s.value }.get)
+        FailureAnnounced(oFailure.map { case (s: BString) => s.value }.get)
       } else {
         val peers = getPeers(dict.get("peers"))
         import scala.concurrent.duration._
-        val warningMessage = dict.get("warning message").map { case (s: BString) ⇒ s.value }
-        val minInterval = dict.get("min interval").map { case (i: BInteger) ⇒ i.value seconds }
-        val interval = dict.get("interval").map { case (i: BInteger) ⇒ i.value seconds }.get
-        val incomplete = dict.get("incomplete").map { case (i: BInteger) ⇒ i.value }.get
-        val complete = dict.get("complete").map { case (i: BInteger) ⇒ i.value }.get
-        val trackerId = dict.get("tracker id").map { case (s: BString) ⇒ s.value }
+        val warningMessage = dict.get("warning message").map { case (s: BString) => s.value }
+        val minInterval = dict.get("min interval").map { case (i: BInteger) => i.value seconds }
+        val interval = dict.get("interval").map { case (i: BInteger) => i.value seconds }.get
+        val incomplete = dict.get("incomplete").map({ case (i: BInteger) => i.value }).getOrElse(0l)
+        val complete = dict.get("complete").map({ case (i: BInteger) => i.value }).getOrElse(0l)
+        val trackerId = dict.get("tracker id").map { case (s: BString) => s.value }
         SuccessAnnounced(warningMessage, minInterval, interval, incomplete.toInt, complete.toInt, trackerId, peers)
       }
     }
-    case _ ⇒ throw new RuntimeException
+    case _ => throw new RuntimeException
   }
   private def getPeers(dict: Option[BValue]): List[TrackerPeer] = dict match {
-    case Some((s: BString)) ⇒ TrackerPeer(s)
-    case Some((l: BList))   ⇒ TrackerPeer(l)
-    case None               ⇒ Nil
-    case _                  ⇒ throw new RuntimeException
+    case Some((s: BString)) => TrackerPeer(s)
+    case Some((l: BList))   => TrackerPeer(l)
+    case None               => Nil
+    case _                  => throw new RuntimeException
   }
 }
 abstract class Error(retry: FiniteDuration, dateTime: LocalDateTime, tracker: Tracker)
@@ -87,16 +87,17 @@ case class TrackerResponse(failureReason: Option[String],
 case class TrackerPeer(peerId: Option[PeerId], ip: String, port: Short) extends AbstractPeer(ip, port)
 object TrackerPeer {
   def apply(list: BList): List[TrackerPeer] = list match {
-    case BList(l) ⇒ TrackerPeer(l, List())
+    case BList(l) => TrackerPeer(l, List())
   }
   @tailrec
   private def apply(list: List[BValue], result: List[TrackerPeer]): List[TrackerPeer] = list match {
-    case head :: tail ⇒ head match {
-      case (d: BDictionary) ⇒ TrackerPeer(tail, TrackerPeer(d) :: result)
-      case _                ⇒ throw new RuntimeException
+    case head :: tail => head match {
+      case (d: BDictionary) => TrackerPeer(tail, TrackerPeer(d) :: result)
+      case _                => throw new RuntimeException
     }
-    case Nil ⇒ result
+    case Nil => result
   }
+
   def apply(str: BString): List[TrackerPeer] = {
     val value = str.value.getBytes
     val buffer = ByteBuffer.wrap(value)
@@ -107,7 +108,7 @@ object TrackerPeer {
   @tailrec
   private def xx(buffer: ByteBuffer, result: List[TrackerPeer]): List[TrackerPeer] = {
     buffer.order(ByteOrder.BIG_ENDIAN)
-    val ip = Range(0, 3).map(i ⇒ buffer.get.asInstanceOf[Int]).foldLeft(StringBuilder.newBuilder)((builder, current) ⇒ builder.append(current)).toString
+    val ip = Range(0, 4).map(i => buffer.get.asInstanceOf[Int] & 0xFF).foldLeft(StringBuilder.newBuilder)((builder, current) => builder.append(current).append(".")).toString
     val port = buffer.getShort
     if (buffer.hasRemaining) {
       xx(buffer, TrackerPeer(None, ip, port) :: result)
@@ -117,9 +118,9 @@ object TrackerPeer {
   }
 
   def apply(dict: BDictionary): TrackerPeer = {
-    val id = dict.get("peer id").map { case (s: BString) ⇒ PeerId(s.value) }
-    val ip = dict.get("ip").map { case (s: BString) ⇒ s.value }.get
-    val port = dict.get("port").map { case (i: BInteger) ⇒ i.value.toShort }.get
+    val id = dict.get("peer id").map { case (s: BString) => PeerId(s.value) }
+    val ip = dict.get("ip").map { case (s: BString) => s.value }.get
+    val port = dict.get("port").map { case (i: BInteger) => i.value.toShort }.get
     TrackerPeer(id, ip, port)
   }
 }
