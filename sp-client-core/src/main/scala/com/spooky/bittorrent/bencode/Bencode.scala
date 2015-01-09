@@ -5,8 +5,22 @@ import com.spooky.bittorrent.bencode.wtf._
 import scala.reflect.io.Streamable.Bytes
 import spray.http.HttpData
 
+abstract class BOption {
+
+}
+sealed case class BSome[T](value: T) extends BOption
+sealed case class BNone[T]() extends BOption
+
 abstract class BValue {
   def toBencode: String
+  def toBDictionary: Option[BDictionary] = this match {
+    case (d: BDictionary) => Some(d)
+    case _                => None
+  }
+  def toBString: Option[BString] = this match {
+    case (s: BString) => Some(s)
+    case _            => None
+  }
 }
 case class BString(value: String) extends BValue {
   override def toBencode = value.length + ":" + value
@@ -40,7 +54,7 @@ object Bencode {
   }
 
   def decode(stream: HttpData.NonEmpty): BValue = {
-		  decode(HttpDataBStream(stream))
+    decode(HttpDataBStream(stream))
   }
 
   def decode(stream: BStream): BValue = {

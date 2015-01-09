@@ -4,9 +4,11 @@ import com.spooky.bittorrent.metainfo.Checksum
 import com.spooky.bittorrent.bencode.BString
 import com.spooky.bittorrent.bencode.BList
 import com.spooky.bittorrent.metainfo.Torrent
+import java.nio.ByteBuffer
 
 case class PeerId(id: String)
 object PeerId {
+  def apply() = {}
   def create = PeerId("SPOOKY6-c2b4f6c4h4d9")
 }
 

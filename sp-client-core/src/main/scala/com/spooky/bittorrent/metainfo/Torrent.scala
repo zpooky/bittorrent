@@ -20,35 +20,45 @@ import java.util.Base64
 import java.net.URLEncoder
 import org.apache.commons.codec.net.URLCodec
 import java.nio.charset.Charset
+import java.nio.ByteBuffer
 
-abstract class Algorithm {
+abstract class Algorithm(val bytes: Int) {
   override def toString = this.getClass.getSimpleName.replace("$", "")
 }
-object Sha1 extends Algorithm
-object Md5 extends Algorithm
+object Sha1 extends Algorithm(20)
+object Md5 extends Algorithm(16)
 sealed case class Checksum(sum: Array[Byte], algorithm: Algorithm)
+object Checksum {
+  def apply(raw: ByteBuffer, algorithm: Algorithm): Checksum = {
+    val checksum = Array.ofDim[Byte](algorithm.bytes)
+    for (n <- 0 until algorithm.bytes) {
+      checksum(n) = raw.get
+    }
+    Checksum(checksum, algorithm)
+  }
+}
 case class Info(pieceLength: Int, length: Long, files: List[TorrentFile], pieces: List[Checksum], priv: Boolean, rootHash: Option[Checksum])
 case class Node(host: String, port: Int)
 case class Tracker(announce: String)
 case class TorrentFile(name: String, bytes: Long)
-case class Torrent(infoHash: Checksum,info: Info, nodes: List[Node], trackers: Set[Tracker], creationDate: Option[String], comment: Option[String], createdBy: Option[String], encoding: Option[String], httpSeeds: List[URL]) extends Metainfo
+case class Torrent(infoHash: Checksum, info: Info, nodes: List[Node], trackers: Set[Tracker], creationDate: Option[String], comment: Option[String], createdBy: Option[String], encoding: Option[String], httpSeeds: List[URL]) extends Metainfo
 object Torrent {
   def apply(torrent: File): Torrent = {
     val stream = TorrentFileStream(torrent)
-//		println(torrent)
-//    println(stream.toString)
+    //		println(torrent)
+    //    println(stream.toString)
     val dictionary = Bencode.decode(stream)
     val infoHash = InfoHash.hash(stream)
-//    println(dictionary)
+    //    println(dictionary)
     stream.close
     val torrentData = dictionary match {
       case (metaInfo: BDictionary) => {
         val infos = info(metaInfo.get("info").map(_.asInstanceOf[BDictionary]).get)
-        Torrent(infoHash = infoHash,info = infos, nodes = nodes(metaInfo), trackers = announce(metaInfo), creationDate = creationDate(metaInfo), comment = comment(metaInfo), createdBy = createdBy(metaInfo), encoding = encoding(metaInfo), httpSeeds = httpSeeds(metaInfo))
+        Torrent(infoHash = infoHash, info = infos, nodes = nodes(metaInfo), trackers = announce(metaInfo), creationDate = creationDate(metaInfo), comment = comment(metaInfo), createdBy = createdBy(metaInfo), encoding = encoding(metaInfo), httpSeeds = httpSeeds(metaInfo))
       }
       case _ => throw new RuntimeException
     }
-//    println(torrentData)
+    //    println(torrentData)
     torrentData
   }
 
@@ -75,7 +85,7 @@ object Torrent {
   private def file(metaInfo: BDictionary, root: String): TorrentFile = {
     val paths = metaInfo.get("path").map { case (l: BList) => l.value }
     val path = paths.map(l => l.map({ case (s: BString) => s.value }).foldLeft(StringBuilder.newBuilder)((builder, current) => builder ++= File.separator ++= current).toString).get
-    TorrentFile(root +  path, metaInfo.get("length").map({ case (i: BInteger) => i.value }).get)
+    TorrentFile(root + path, metaInfo.get("length").map({ case (i: BInteger) => i.value }).get)
   }
 
   private def checksums(metaInfo: BDictionary): List[Checksum] = {
@@ -130,13 +140,13 @@ object Torrent {
     val url = getClass.getResource("/debian.torrent")
     val file = new File(url.toURI())
     val t = Torrent(new File("D:\\torrent\\Community.S05E01.HDTV.x264-LOL.mp4.torrent"))
-//    println(Base64.getEncoder.encodeToString(t.infoHash.sum))
+    //    println(Base64.getEncoder.encodeToString(t.infoHash.sum))
     println("%40%CA%3F%3E%28%EA_%89%F3%29qv%D7%813%08R%9E%12%1A")
     val codec = new URLCodec
-    println(new String(codec.encode(t.infoHash.sum),Charset.forName("ASCII")))
-    println(codec.encode(new String(t.infoHash.sum,Charset.forName("UTF8"))))
-    println(codec.encode(new String(t.infoHash.sum,Charset.forName("ASCII"))))
-    println(codec.encode(new String(t.infoHash.sum,Charset.forName("UTF16"))))
-//    new File("D:\\torrent\\").listFiles().filter { x => x.isFile() }.filter { x => x.getName.endsWith(".torrent") }.foreach { x => Torrent(x) }
+    println(new String(codec.encode(t.infoHash.sum), Charset.forName("ASCII")))
+    println(codec.encode(new String(t.infoHash.sum, Charset.forName("UTF8"))))
+    println(codec.encode(new String(t.infoHash.sum, Charset.forName("ASCII"))))
+    println(codec.encode(new String(t.infoHash.sum, Charset.forName("UTF16"))))
+    //    new File("D:\\torrent\\").listFiles().filter { x => x.isFile() }.filter { x => x.getName.endsWith(".torrent") }.foreach { x => Torrent(x) }
   }
 }

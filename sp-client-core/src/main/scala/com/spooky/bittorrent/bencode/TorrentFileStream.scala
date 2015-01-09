@@ -45,8 +45,4 @@ object TorrentFileStream {
     val channel = FileChannel.open(torrent.toPath, StandardOpenOption.READ)
     new TorrentFileStream(channel, channel.map(MapMode.READ_ONLY, 0, channel.size).load)
   }
-
-  def printBinary(b1: Byte) = {
-    String.format("%8s", Integer.toBinaryString(b1 & 0xFF)).replace(' ', '0');
-  }
 }

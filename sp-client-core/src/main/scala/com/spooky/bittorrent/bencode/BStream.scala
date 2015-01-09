@@ -22,6 +22,15 @@ class ByteBStream(bytes: Array[Byte], index: Int) extends BStream {
   def headByte: Byte = bytes(index)
   def tail: BStream = new ByteBStream(bytes, index + 1)
   def isEmpty: Boolean = index >= bytes.length
+  override def toString: String = {
+    val b = StringBuilder.newBuilder
+    var s: BStream = this
+    while (!s.isEmpty) {
+      b.append(s.headChar)
+      s = s.tail
+    }
+    b.toString
+  }
 }
 
 object HttpDataBStream {
@@ -40,5 +49,5 @@ class HttpDataBStream(chunk: ByteString, index: Int, nextChunk: Stream[HttpData]
       new HttpDataBStream(chunk, nextIndex, nextChunk)
     } else HttpDataBStream(nextChunk)
   }
-  def isEmpty: Boolean = (index + 1) == chunk.length && nextChunk.isEmpty
+  def isEmpty: Boolean = (index + 1) >= chunk.length && nextChunk.isEmpty
 }

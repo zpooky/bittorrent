@@ -28,6 +28,7 @@ import spray.http.MediaTypes
 import spray.http.MediaRanges
 import com.spooky.bittorrent.model.TorrentConfiguration
 import com.spooky.bittorrent.Config
+import com.spooky.bittorrent.bencode.BDictionary
 
 class TrackerManager(tracker: Tracker)(implicit context: ExecutionContext, actorSystem: ActorSystem, actors: BittorrentActors) {
   def announceEvent(statistics: TorrentStatistics)(implicit id: PeerId) {
@@ -66,15 +67,8 @@ class TrackerManager(tracker: Tracker)(implicit context: ExecutionContext, actor
   private implicit def AnnounceResponseUnmarshaller =
     Unmarshaller[Announced](MediaRanges.`*/*`) {
       case HttpEntity.NonEmpty(_, data) => {
-        val a = try {
-          val b = Bencode.decode(data.toByteArray)
-          println(b)
-          Announced(b)
-        } catch {
-          case e: Exception => e.printStackTrace; throw e
-        }
-        println("__::::::::::::::" + a)
-        a
+        val b = Bencode.decode(data.toByteArray)
+        Announced(b)
       }
       case e => println(e); null
     }

@@ -10,6 +10,7 @@ import com.spooky.bittorrent.model.TorrentStatistics
 import com.spooky.bittorrent.SpookyBittorrent._
 import com.spooky.bittorrent.protocol.server.tracker.TrackerProvider
 import com.spooky.bittorrent.protocol.server.tracker.TrackerManager
+import java.nio.ByteBuffer
 
 object BittorrentClient {
   def main(args: Array[String]) {
@@ -30,5 +31,7 @@ object BittorrentClient {
     //ref = Client.start(torrent)
     //    Thread.sleep(5000)
     //    System.exit(0)
+    val test = ByteBuffer.allocate(11).putInt(0)// == Keepalive
+
   }
 }

@@ -19,6 +19,7 @@ import com.spooky.bittorrent.bencode.BValue
 import com.spooky.bittorrent.bencode.BDictionary
 import scala.annotation.tailrec
 import com.spooky.bittorrent.bencode.BString
+import java.nio.charset.Charset
 
 case class Announcing(tracker: Tracker)
 case class AnnounceRequest(checkSum: Checksum,
@@ -99,7 +100,7 @@ object TrackerPeer {
   }
 
   def apply(str: BString): List[TrackerPeer] = {
-    val value = str.value.getBytes
+    val value = str.value.getBytes(Charset.forName("ASCII"))
     val buffer = ByteBuffer.wrap(value)
     if (buffer.hasRemaining) {
       xx(buffer, List())
@@ -108,7 +109,8 @@ object TrackerPeer {
   @tailrec
   private def xx(buffer: ByteBuffer, result: List[TrackerPeer]): List[TrackerPeer] = {
     buffer.order(ByteOrder.BIG_ENDIAN)
-    val ip = Range(0, 4).map(i => buffer.get.asInstanceOf[Int] & 0xFF).foldLeft(StringBuilder.newBuilder)((builder, current) => builder.append(current).append(".")).toString
+    val parts = Range(0, 4).map(i => buffer.get.asInstanceOf[Int] & 0xFF).map(i => i.toString).toArray
+    val ip = String.join(".", parts: _*)
     val port = buffer.getShort
     if (buffer.hasRemaining) {
       xx(buffer, TrackerPeer(None, ip, port) :: result)

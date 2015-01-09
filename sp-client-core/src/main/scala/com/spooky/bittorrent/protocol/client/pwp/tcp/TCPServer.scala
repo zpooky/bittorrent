@@ -10,7 +10,7 @@ import akka.io.Tcp._
 import akka.actor.ActorSystem
 import akka.actor.Props
 
-class TCPServer(handler: ActorRef) extends Actor {
+class TCPServer(handlerProps: HandlerProps) extends Actor {
 
   import context.system
 
@@ -20,7 +20,12 @@ class TCPServer(handler: ActorRef) extends Actor {
     case Tcp.CommandFailed(_: Tcp.Bind) => context stop self
 
     case Tcp.Connected(remote, local) =>
+      val handler = context.actorOf(handlerProps.props(sender))
       sender ! Tcp.Register(handler)
   }
 
+}
+
+trait HandlerProps {
+  def props(connection: ActorRef): Props
 }
