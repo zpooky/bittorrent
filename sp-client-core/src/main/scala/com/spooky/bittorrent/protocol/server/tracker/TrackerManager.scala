@@ -31,7 +31,7 @@ import com.spooky.bittorrent.Config
 import com.spooky.bittorrent.bencode.BDictionary
 
 class TrackerManager(tracker: Tracker)(implicit context: ExecutionContext, actorSystem: ActorSystem, actors: BittorrentActors) {
-  def announceEvent(statistics: TorrentStatistics)(implicit id: PeerId) {
+  def announce(statistics: TorrentStatistics)(implicit id: PeerId) {
     val requestTimeout = Timeout(1 millisecond)
     val pipeline = announcePipeline
     actors.announce ! Announcing(tracker)
@@ -56,6 +56,7 @@ class TrackerManager(tracker: Tracker)(implicit context: ExecutionContext, actor
     val infoHash = new String(codec.encode(statistics.infoHash.sum), ascii)
     val peerId = id.id
     val key = "ss"
+    val port = 6881
     val builder = StringBuilder.newBuilder
     builder ++= s"info_hash=${infoHash}&peer_id=${peerId}&no_peer_id=0&event=started&port=${Config.peerWireProtocolPort}&"
     builder ++= s"uploaded=${statistics.uploaded}&downloaded=${statistics.downloaded}&left=${statistics.left}&"

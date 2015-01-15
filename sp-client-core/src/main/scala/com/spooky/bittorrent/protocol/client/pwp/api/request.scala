@@ -5,17 +5,32 @@ import com.spooky.bittorrent.model.PeerId
 import akka.util.ByteString
 import java.nio.ByteOrder
 import java.nio.ByteBuffer
-import com.spooky.bittorrent.metainfo.Checksum
 import com.spooky.bittorrent.metainfo.Sha1
 import com.spooky.bittorrent.Binary
 import java.util.BitSet
+import java.nio.charset.Charset
 
-case class Handshake(infoHash: Checksum, peerId: PeerId)
+trait Showable {
+  def toByteString: ByteString
+}
+abstract class PeerWireMessage
+case class Handshake(infoHash: Checksum, peerId: PeerId) extends PeerWireMessage with Showable {
+  def toByteString: ByteString = {
+    val buffer = ByteBuffer.allocate(1 + 19 + 8 + 20 + 20)
+    buffer.put(19.asInstanceOf[Byte])
+    val ascii = Charset.forName("ASCII")
+    buffer.put("BitTorrent protocol".getBytes(ascii))
+    buffer.put(infoHash.sum)
+    buffer.put(peerId.id.getBytes(ascii))
+    println(buffer)
+    buffer.flip()
+    println(buffer)
+    ByteString(buffer)
+  }
+}
 object Handshake {
-  def apply(bytes: ByteString): Handshake = {
-    val buffer = bytes.toByteBuffer
+  def apply(buffer: ByteBuffer): Handshake = {
     debug(buffer.duplicate())
-    buffer.order(ByteOrder.BIG_ENDIAN)
     val length = buffer.get.asInstanceOf[Int] & 0xFF
     val p = read(buffer, length)
     val reserved = buffer.getLong
@@ -38,17 +53,15 @@ object Handshake {
     builder.toString
   }
 }
-abstract class PeerWireMessage
 object PeerWireMessage {
-  def apply(stream: ByteString): PeerWireMessage = {
-    val buffer = stream.toByteBuffer
-    buffer.order(ByteOrder.BIG_ENDIAN)
+  def apply(buffer: ByteBuffer): PeerWireMessage = {
+    val dup = buffer.duplicate.get & 0xFF
     val length = buffer.getInt
-
+    println("length::::::" + length + "|" + dup)
     if (length == 0) {
       KeepAlive
     } else {
-      val messageId = buffer.get
+      val messageId = buffer.get & 0xFF
       messageId match {
         case 0 => Choke
         case 1 => Unchoke
@@ -60,8 +73,8 @@ object PeerWireMessage {
         case 7 => Piece(length - 1, buffer)
         case 8 => Cancel(buffer)
         case 9 => Port(buffer)
+        case _ => null
       }
-      null
     }
   }
 }
@@ -71,20 +84,28 @@ object Unchoke extends PeerWireMessage
 object Intrested extends PeerWireMessage
 object NotIntrested extends PeerWireMessage
 case class Have(index: Int) extends PeerWireMessage
-object Have {
-  def apply(buffer: ByteBuffer): Have = Have(buffer.getInt)
-}
-case class Bitfield(blocks: BitSet) extends PeerWireMessage
-object Bitfield {
-  def apply(length: Int, buffer: ByteBuffer): Bitfield = {
-    Bitfield(BitSet.valueOf(buffer.limit(length).asInstanceOf[ByteBuffer]))
+case class Bitfield(blocks: BitSet) extends PeerWireMessage with Showable {
+  def toByteString: ByteString = {
+    null
   }
 }
 case class Request(index: Int, begin: Int, length: Int) extends PeerWireMessage
+case class Piece(index: Int, begin: Int, buffer: ByteBuffer) extends PeerWireMessage
+case class Cancel(index: Int, begin: Int, length: Int) extends PeerWireMessage
+object Have {
+  def apply(buffer: ByteBuffer): Have = Have(buffer.getInt)
+}
+object Bitfield {
+  def apply(length: Int, buffer: ByteBuffer): Bitfield = {
+    val limit = buffer.limit
+    val bitfield = Bitfield(BitSet.valueOf(buffer.limit(length).asInstanceOf[ByteBuffer]))
+    buffer.limit(limit)
+    bitfield
+  }
+}
 object Request {
   def apply(buffer: ByteBuffer): Request = Request(buffer.getInt, buffer.getInt, buffer.getInt)
 }
-case class Piece(index: Int, begin: Int, buffer: ByteBuffer) extends PeerWireMessage
 object Piece {
   def apply(length: Int, buffer: ByteBuffer): Piece = {
     val index = buffer.getInt
@@ -92,7 +113,6 @@ object Piece {
     Piece(index, begin, buffer.duplicate.limit(length - 8).asInstanceOf[ByteBuffer].compact)
   }
 }
-case class Cancel(index: Int, begin: Int, length: Int) extends PeerWireMessage
 object Cancel {
   def apply(buffer: ByteBuffer): Cancel = Cancel(buffer.getInt, buffer.getInt, buffer.getInt)
 }

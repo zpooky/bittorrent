@@ -20,12 +20,12 @@ class TCPServer(handlerProps: HandlerProps) extends Actor {
     case Tcp.CommandFailed(_: Tcp.Bind) => context stop self
 
     case Tcp.Connected(remote, local) =>
-      val handler = context.actorOf(handlerProps.props(sender))
+      val handler = context.actorOf(handlerProps.props(remote, sender))
       sender ! Tcp.Register(handler)
   }
 
 }
 
 trait HandlerProps {
-  def props(connection: ActorRef): Props
+  def props(client: InetSocketAddress, connection: ActorRef): Props
 }

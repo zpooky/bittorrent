@@ -22,6 +22,10 @@ import org.apache.commons.codec.net.URLCodec
 import java.nio.charset.Charset
 import java.nio.ByteBuffer
 
+object Torrents {
+    type InfoHash = Checksum
+}
+
 abstract class Algorithm(val bytes: Int) {
   override def toString = this.getClass.getSimpleName.replace("$", "")
 }
