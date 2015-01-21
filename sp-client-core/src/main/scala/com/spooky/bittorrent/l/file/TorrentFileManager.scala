@@ -11,52 +11,69 @@ import java.nio.file.StandardOpenOption._
 import scala.collection.concurrent.Map
 import com.spooky.bittorrent.metainfo.TorrentFile
 import scala.annotation.tailrec
+import java.nio.Buffer
 //import scala.collection.mutable.Map
 
 class TorrentFileManager(torrent: Torrent, root: Path) {
-  private lazy val writers = Map[Path, FileChannel]()
+  private lazy val channels = Map[Path, FileChannel]()
+  //  {
+  //      def apply(key: Path): Option[FileChannel] = {
+  //        null
+  //      }
+  //  }
 
   def have(index: Int): Boolean = false
   def haveAnyBlocks: Boolean = false
-  def blocks: BitSet = null
-  def read(index: Int, begin: Int, length: Int): String = null
+  val b = 0.asInstanceOf[Byte]
+  def blocks: BitSet = BitSet.valueOf(Array.fill[Byte](Math.ceil(torrent.info.length / torrent.info.pieceLength).asInstanceOf[Int])(0))
+  def read(index: Int, begin: Int, length: Int): ByteBuffer = {
+    val buffer = ByteBuffer.wrap(Array.ofDim[Byte](length))
+    fileFor(index, begin, length).foreach({
+      case Tuple3(path, offset, length) => {
+        val readers = channels.get(path).get
+//        readers.transferTo(offset, length, buffer)
+      }
+    })
+    buffer.flip.asInstanceOf[ByteBuffer]
+  }
   def write(index: Int, begin: Int, data: ByteBuffer): Unit = {
-      def checkBounds(index: Int, position: Long, length: Int) {
-        //        FileChannel.open(file, WRITE,CREATE)
-      }
-      def getPosition(index: Int, begin: Int): Long = {
-        0l
-      }
-      def fileFor(index: Int, begin: Int, length: Int): List[Tuple2[Path, Long]] = {
-          @tailrec
-          def rec(start: Long, length: Long, files: List[TorrentFile]): List[Tuple2[Path, Long]] = files match {
-            case Nil if length > 0          => throw new RuntimeException
-            case Nil                        => Nil
-            case _ if length == 0           => Nil
-            case x :: xs if start < x.bytes => (toAbsolute(x.name), start) :: rec(0, (start + length) - x.bytes, xs)
-            case x :: xs                    => rec(start - x.bytes, length, xs)
-          }
-        val i: Long = (index * blockSize) + begin
-        rec(i, length, torrent.info.files)
-      }
-    //    val position = getPosition(index, begin)
-    //    val length = data.limit
-    //    checkBounds(index, position, length)
+    checkIndexConstraints(begin, data.limit())
     fileFor(index, begin, data.limit).foreach({
-      case Tuple2(path, offset) => {
-        val writer = writers.get(path).get.position(offset)
-        writer.lock(offset, length, false)
+      case Tuple3(path, offset, length) => {
+        val writer = channels.get(path).get.position(offset)
+        val lock = writer.lock(offset, length, false)
         try {
-          writer.write(data)
+          writer.write(data, length)
         } finally {
-          writer.lock.release
+          lock.release
         }
       }
     })
   }
+  private def checkIndexConstraints(begin: Int, length: Long): Unit = if (begin + length > blockSize) {
+    println("wtgf")
+  }
+  private def startOf(index: Int, begin: Int): Long = (index * blockSize) + begin
   private def toAbsolute(file: String): Path = root.resolve(file)
   private def blockSize: Int = torrent.info.pieceLength
+  private def get(): RandomAccessFile = {
+    null
+  }
+  type Offset = Long
+  type Length = Long
+  def fileFor(index: Int, begin: Int, length: Int): List[Tuple3[Path, Offset, Length]] = {
+      //          @tailrec
+      def rec(start: Long, length: Long, files: List[TorrentFile]): List[Tuple3[Path, Offset, Length]] = files match {
+        case Nil if length > 0          => throw new RuntimeException
+        case Nil                        => Nil
+        case _ if length == 0           => Nil
+        case s :: xs if start < s.bytes => (toAbsolute(s.name), start, if (length > s.bytes) s.bytes else length) :: rec(0, (start + length) - s.bytes, xs)
+        case s :: xs                    => rec(start - s.bytes, length, xs)
+      }
+    val start = startOf(index, begin)
+    rec(start, length, torrent.info.files)
+  }
   def close() {
-    writers.values.foreach { value => value.close() }
+    channels.values.foreach { value => value.close() }
   }
 }
