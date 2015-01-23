@@ -21,9 +21,10 @@ import java.net.URLEncoder
 import org.apache.commons.codec.net.URLCodec
 import java.nio.charset.Charset
 import java.nio.ByteBuffer
+import java.security.MessageDigest
 
 object Torrents {
-    type InfoHash = Checksum
+  type InfoHash = Checksum
 }
 
 abstract class Algorithm(val bytes: Int) {
@@ -31,7 +32,25 @@ abstract class Algorithm(val bytes: Int) {
 }
 object Sha1 extends Algorithm(20)
 object Md5 extends Algorithm(16)
-sealed case class Checksum(sum: Array[Byte], algorithm: Algorithm)
+sealed case class Checksum(sum: Array[Byte], algorithm: Algorithm) {
+  def check(other: Array[Byte]): Boolean = {
+    check(other.length, other)
+  }
+  def check(length: Int, other: Array[Byte]*): Boolean = {
+      @tailrec
+      def rec(length: Int, other: Seq[Array[Byte]], index: Int, digest: MessageDigest): Array[Byte] = {
+        if (other.length - 1 == index) {
+          digest.update(other(index), 0, length)
+          digest.digest
+        } else {
+          digest.update(other(index))
+          rec(length, other, index + 1, digest)
+        }
+      }
+    val digester = MessageDigest.getInstance(algorithm.toString)
+    MessageDigest.isEqual(sum, rec(length, other, 0, digester))
+  }
+}
 object Checksum {
   def apply(raw: ByteBuffer, algorithm: Algorithm): Checksum = {
     val checksum = Array.ofDim[Byte](algorithm.bytes)

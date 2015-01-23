@@ -17,7 +17,7 @@ object SessionManager {
   def get(infoHash: Checksum): Option[SessionManager] = Option(sessions.get(infoHash))
   def register(setup: TorrentSetup): TorrentRef = {
     val torrent = setup.torrent
-    val torrentFileState = FileInitiator(torrent, setup.root)
+    val torrentFileState = new FileInitiator(torrent, setup.root).state
     val fileManager = new TorrentFileManager(torrent, setup.root)
     val peerId = PeerId.create
     sessions.put(torrent.infoHash, new SessionManager(fileManager, peerId))

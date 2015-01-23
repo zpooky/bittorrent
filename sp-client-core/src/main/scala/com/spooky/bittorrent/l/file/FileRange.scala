@@ -10,6 +10,7 @@ class FileRange(size: Long, chunks: List[Range]) {
     for (index <- 0 until bits) {
       bitset.set(index, hve(index))
     }
+    println(bits)
     bitset
   }
   def have(chunkSize: Int)(index: Int): Boolean = {

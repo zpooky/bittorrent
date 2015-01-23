@@ -6,7 +6,7 @@ import com.spooky.bittorrent.bencode.BList
 import com.spooky.bittorrent.metainfo.Torrent
 import java.nio.ByteBuffer
 import java.nio.file.Path
-import scala.collection.mutable.BitSet
+import java.util.BitSet
 
 case class PeerId(id: String)
 object PeerId {
