@@ -13,9 +13,9 @@ object Binary {
     String.format("%64s", java.lang.Long.toBinaryString(l)).replace(' ', '0');
   }
   def toBinary(s: BitSet): String = {
-    val buffer = StringBuilder.newBuilder
+    var buffer = StringBuilder.newBuilder
     for (chunk <- s.toByteArray) {
-      buffer.append(toBinary(chunk))
+      buffer = buffer.append(toBinary(chunk))
     }
     buffer.toString
   }

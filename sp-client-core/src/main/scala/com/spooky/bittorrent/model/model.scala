@@ -7,13 +7,24 @@ import com.spooky.bittorrent.metainfo.Torrent
 import java.nio.ByteBuffer
 import java.nio.file.Path
 import java.util.BitSet
+import com.spooky.bittorrent.Binary
+import java.nio.charset.Charset
 
 case class PeerId(id: String)
 object PeerId {
-  def apply() = {}
+  def parse(buffer: ByteBuffer):PeerId = {
+    val buff = Array.ofDim[Byte](20)
+    buffer.get(buff)
+    val charset = Charset.forName("ASCII")
+    PeerId(new String(buff, charset).intern())
+  }
   def create = PeerId("SPOOKY6-c2b4f6c4h4d9")
 }
-case class TorrentFileState(have: BitSet)
+case class TorrentFileState(have: BitSet) {
+  override def toString: String = {
+    "|" + Binary.toBinary(have) + "|"
+  }
+}
 case class TorrentSetup(torrent: Torrent, root: Path)
 case class TorrentStatistics(infoHash: Checksum, uploaded: Long, downloaded: Long, left: Long, corrupt: Long)
 case class TorrentConfiguration(port: Short, numwant: Int)

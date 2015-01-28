@@ -22,6 +22,8 @@ import org.apache.commons.codec.net.URLCodec
 import java.nio.charset.Charset
 import java.nio.ByteBuffer
 import java.security.MessageDigest
+import com.google.gson.GsonBuilder
+import com.google.gson.Gson
 
 object Torrents {
   type InfoHash = Checksum
@@ -29,6 +31,7 @@ object Torrents {
 
 abstract class Algorithm(val bytes: Int) {
   override def toString = this.getClass.getSimpleName.replace("$", "")
+  def newMessageDigest = MessageDigest.getInstance(toString)
 }
 object Sha1 extends Algorithm(20)
 object Md5 extends Algorithm(16)
@@ -50,9 +53,10 @@ sealed case class Checksum(sum: Array[Byte], algorithm: Algorithm) {
     val digester = MessageDigest.getInstance(algorithm.toString)
     MessageDigest.isEqual(sum, rec(length, other, 0, digester))
   }
+  def compare(other: Array[Byte]): Boolean = MessageDigest.isEqual(sum, other)
 }
 object Checksum {
-  def apply(raw: ByteBuffer, algorithm: Algorithm): Checksum = {
+  def parse(raw: ByteBuffer, algorithm: Algorithm): Checksum = {
     val checksum = Array.ofDim[Byte](algorithm.bytes)
     for (n <- 0 until algorithm.bytes) {
       checksum(n) = raw.get
@@ -64,7 +68,9 @@ case class Info(pieceLength: Int, length: Long, files: List[TorrentFile], pieces
 case class Node(host: String, port: Int)
 case class Tracker(announce: String)
 case class TorrentFile(name: String, bytes: Long)
-case class Torrent(infoHash: Checksum, info: Info, nodes: List[Node], trackers: Set[Tracker], creationDate: Option[String], comment: Option[String], createdBy: Option[String], encoding: Option[String], httpSeeds: List[URL]) extends Metainfo
+case class Torrent(infoHash: Checksum, info: Info, nodes: List[Node], trackers: Set[Tracker], creationDate: Option[String], comment: Option[String], createdBy: Option[String], encoding: Option[String], httpSeeds: List[URL]) extends Metainfo {
+  //  override def toString: String = new GsonBuilder().setPrettyPrinting().create().toJson(this)
+}
 object Torrent {
   def apply(torrent: File): Torrent = {
     val stream = TorrentFileStream(torrent)

@@ -13,16 +13,16 @@ import com.spooky.bittorrent.l.SessionManager
 import java.nio.file.Path
 import com.spooky.bittorrent.l.file.FileInitiator
 import com.spooky.bittorrent.model.TorrentSetup
-
+import com.spooky.bittorrent.l.file.FileInitiator2
 
 object BittorrentAPI {
   implicit val system = ActorSystem("spooky-bittorrent")
   implicit val id = PeerId.create
   implicit val actors = new BittorrentActors(system)
-
+  //TODO make it better(message passing to actors and the like)
   def start(setup: TorrentSetup): TorrentRef = {
     val torrent = setup.torrent
-    val tracker = new TrackerProvider(torrent)
+//    val tracker = new TrackerProvider(torrent)
     val manager = new TrackerManager(torrent.trackers.find(_ => true).get)
     val statistics = TorrentStatistics(torrent.infoHash, 0, 0, 0, 0)
     val ref = SessionManager.register(setup)

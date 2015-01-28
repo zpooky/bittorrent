@@ -12,9 +12,15 @@ import scala.collection.concurrent.Map
 import com.spooky.bittorrent.metainfo.TorrentFile
 import scala.annotation.tailrec
 import java.nio.Buffer
+import com.spooky.bittorrent.model.TorrentFileState
+import java.util.concurrent.atomic.AtomicReference
 //import scala.collection.mutable.Map
 
-class TorrentFileManager(torrent: Torrent, root: Path) {
+object TorrentFileManager {
+  def apply(torrent: Torrent, root: Path, state: TorrentFileState): TorrentFileManager = new TorrentFileManager(torrent, root, new AtomicReference[BitSet](state.have))
+}
+
+class TorrentFileManager private (torrent: Torrent, root: Path, have: AtomicReference[BitSet]) {
   private lazy val channels = Map[Path, FileChannel]()
   //  {
   //      def apply(key: Path): Option[FileChannel] = {
@@ -22,16 +28,29 @@ class TorrentFileManager(torrent: Torrent, root: Path) {
   //      }
   //  }
 
-  def have(index: Int): Boolean = false
-  def haveAnyBlocks: Boolean = false
-  val b = 0.asInstanceOf[Byte]
-  def blocks: BitSet = BitSet.valueOf(Array.fill[Byte](Math.ceil(torrent.info.length / torrent.info.pieceLength).asInstanceOf[Int])(0))
+  def have(index: Int): Boolean = {
+    checkBounds(index)
+    have.get.get(index)
+  }
+  def haveAnyBlocks: Boolean = {
+      def rec(set: BitSet, index: Int): Boolean = {
+        if (set.size == index) {
+          false
+        } else if (set.get(index)) {
+          true
+        } else {
+          rec(set, index + 1)
+        }
+      }
+    rec(have.get, 0)
+  }
+  def blocks: BitSet = have.get
   def read(index: Int, begin: Int, length: Int): ByteBuffer = {
     val buffer = ByteBuffer.wrap(Array.ofDim[Byte](length))
     fileFor(index, begin, length).foreach({
       case Tuple3(path, offset, length) => {
         val readers = channels.get(path).get
-//        readers.transferTo(offset, length, buffer)
+        //        readers.transferTo(offset, length, buffer)
       }
     })
     buffer.flip.asInstanceOf[ByteBuffer]
@@ -49,6 +68,9 @@ class TorrentFileManager(torrent: Torrent, root: Path) {
         }
       }
     })
+  }
+  private def checkBounds(index: Int) {
+
   }
   private def checkIndexConstraints(begin: Int, length: Long): Unit = if (begin + length > blockSize) {
     println("wtgf")

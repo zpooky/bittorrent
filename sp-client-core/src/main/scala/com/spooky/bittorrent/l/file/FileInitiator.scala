@@ -1,39 +1,18 @@
 package com.spooky.bittorrent.l.file
 
 import scala.collection.JavaConversions._
+import com.spooky.bittorrent.l.Utils._
 import com.spooky.bittorrent.metainfo.Torrent
-import java.nio.file.Path
 import com.spooky.bittorrent.metainfo.TorrentFile
-import java.nio.channels.FileChannel
-import java.nio.file.StandardOpenOption._
-import scala.io.Source
-import scala.reflect.io.File
 import com.spooky.bittorrent.model.TorrentFileState
-import com.spooky.bittorrent.metainfo.TorrentFile
 import com.spooky.bittorrent.metainfo.Checksum
-import java.security.MessageDigest
+import java.nio.file.Path
+import java.nio.channels.FileChannel
+import scala.reflect.io.File
 import java.io.BufferedInputStream
-import java.util.BitSet
 import scala.annotation.tailrec
 import java.io.BufferedWriter
 
-class BitSetBuilder(bitSet: BitSet, index: Int) {
-
-  def append(b: Boolean): BitSetBuilder = {
-    bitSet.set(index, b)
-    new BitSetBuilder(bitSet, index)
-  }
-  def toBitSet: BitSet = {
-    bitSet
-  }
-}
-object BitSetBuilder {
-  def apply(torrent: Torrent): BitSetBuilder = {
-    println(torrent.info.length + "/" + torrent.info.pieceLength + "==" + Math.ceil(torrent.info.length / torrent.info.pieceLength))
-    val capacity: Int = Math.ceil(torrent.info.length / torrent.info.pieceLength).asInstanceOf[Int]
-    new BitSetBuilder(new BitSet(capacity), 0)
-  }
-}
 class FileInitiator(torrent: Torrent, root: Path) {
   private def rawFiles = torrent.info.files
 

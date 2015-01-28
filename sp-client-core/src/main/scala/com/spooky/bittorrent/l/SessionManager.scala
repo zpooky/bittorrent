@@ -10,15 +10,15 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import com.spooky.bittorrent.model.TorrentRef
 import com.spooky.bittorrent.model.TorrentSetup
-import com.spooky.bittorrent.l.file.FileInitiator
+import com.spooky.bittorrent.l.file.FileInitiator2
 
 object SessionManager {
   private val sessions = new ConcurrentHashMap[Checksum, SessionManager]
   def get(infoHash: Checksum): Option[SessionManager] = Option(sessions.get(infoHash))
   def register(setup: TorrentSetup): TorrentRef = {
     val torrent = setup.torrent
-    val torrentFileState = new FileInitiator(torrent, setup.root).state
-    val fileManager = new TorrentFileManager(torrent, setup.root)
+    val torrentFileState = new FileInitiator2(torrent, setup.root).state()
+    val fileManager = TorrentFileManager(torrent, setup.root, torrentFileState)
     val peerId = PeerId.create
     sessions.put(torrent.infoHash, new SessionManager(fileManager, peerId))
     TorrentRef(torrent.infoHash, peerId)
