@@ -35,7 +35,7 @@ case class Handshake(infoHash: Checksum, peerId: PeerId) extends PeerWireMessage
 }
 object Handshake {
   def parse(buffer: ByteBuffer): Handshake = {
-    debug(buffer.duplicate())
+    //    debug(buffer.duplicate())
     val length = buffer.get.asInstanceOf[Int] & 0xFF
     val p = read(buffer, length)
     val reserved = buffer.getLong
@@ -59,29 +59,35 @@ object Handshake {
   }
 }
 object PeerWireMessage {
-  def apply(buffer: ByteBuffer): PeerWireMessage = {
-    val dup = buffer.duplicate.get & 0xFF
-    val length = buffer.getInt
-    println("length::::::" + length + "|" + dup)
-    if (length == 0) {
-      KeepAlive
+  def apply(buffer: ByteBuffer): Option[PeerWireMessage] = {
+    if (!buffer.hasRemaining()) {
+      None
     } else {
-      val messageId = buffer.get & 0xFF
-      messageId match {
-        case 0 => Choke
-        case 1 => Unchoke
-        case 2 => Intrested
-        case 3 => NotIntrested
-        case 4 => Have.parse(buffer)
-        case 5 => Bitfield.parse(length - 1, buffer)
-        case 6 => Request.parse(buffer)
-        case 7 => Piece.parse(length - 1, buffer)
-        case 8 => Cancel.parse(buffer)
-        case 9 => Port.parse(buffer)
-        case _ => null
+      val dup = buffer.duplicate.get & 0xFF
+      val length = buffer.getInt
+      println("length::::::" + length + "|" + dup)
+        implicit def toOption[T](any: T): Option[T] = Option(any)
+      if (length == 0) {
+        KeepAlive
+      } else {
+        val messageId = buffer.get & 0xFF
+        messageId match {
+          case 0 => Choke
+          case 1 => Unchoke
+          case 2 => Intrested
+          case 3 => NotIntrested
+          case 4 => Have.parse(buffer)
+          case 5 => Bitfield.parse(length - 1, buffer)
+          case 6 => Request.parse(buffer)
+          case 7 => Piece.parse(length - 1, buffer)
+          case 8 => Cancel.parse(buffer)
+          case 9 => Port.parse(buffer)
+          case _ => null
+        }
       }
     }
   }
+
 }
 //keep-alive: <len=0000>
 object KeepAlive extends PeerWireMessage with Showable {
@@ -211,7 +217,7 @@ object Have {
 object Bitfield {
   private[api] def parse(length: Int, buffer: ByteBuffer): Bitfield = {
     val limit = buffer.limit
-    val bitfield = Bitfield(BitSet.valueOf(buffer.limit(buffer.position + length).asInstanceOf[ByteBuffer]))
+    val bitfield = Bitfield(BitSet.valueOf(buffer.duplicate().limit(buffer.position + length).asInstanceOf[ByteBuffer]))
     buffer.position(limit)
     bitfield
   }

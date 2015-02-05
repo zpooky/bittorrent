@@ -18,6 +18,7 @@ object SessionManager {
   def register(setup: TorrentSetup): TorrentRef = {
     val torrent = setup.torrent
     val torrentFileState = new FileInitiator2(torrent, setup.root).state()
+    println(torrentFileState.getDownloaded(torrent))
     val fileManager = TorrentFileManager(torrent, setup.root, torrentFileState)
     val peerId = PeerId.create
     sessions.put(torrent.infoHash, new SessionManager(fileManager, peerId))

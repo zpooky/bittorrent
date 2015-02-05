@@ -9,10 +9,11 @@ import java.nio.file.Path
 import java.util.BitSet
 import com.spooky.bittorrent.Binary
 import java.nio.charset.Charset
+import scala.annotation.tailrec
 
 case class PeerId(id: String)
 object PeerId {
-  def parse(buffer: ByteBuffer):PeerId = {
+  def parse(buffer: ByteBuffer): PeerId = {
     val buff = Array.ofDim[Byte](20)
     buffer.get(buff)
     val charset = Charset.forName("ASCII")
@@ -21,6 +22,16 @@ object PeerId {
   def create = PeerId("SPOOKY6-c2b4f6c4h4d9")
 }
 case class TorrentFileState(have: BitSet) {
+  //This is bugged since last piece is generaly not fully utalized
+  def getDownloaded(torrent: Torrent): Long = {
+      @tailrec
+      def rec(bitset: BitSet, index: Int, accumulated: Long, length: Long): Long = {
+        if (bitset.size == index) {
+          accumulated
+        } else rec(bitset, index + 1, if (bitset.get(index)) accumulated + length else accumulated, length)
+      }
+    rec(have, 0, 0l, torrent.info.pieceLength)
+  }
   override def toString: String = {
     "|" + Binary.toBinary(have) + "|"
   }

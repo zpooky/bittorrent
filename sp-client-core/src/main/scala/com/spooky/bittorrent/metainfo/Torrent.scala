@@ -24,6 +24,8 @@ import java.nio.ByteBuffer
 import java.security.MessageDigest
 import com.google.gson.GsonBuilder
 import com.google.gson.Gson
+import org.apache.commons.codec.binary.Hex
+import java.util.Arrays
 
 object Torrents {
   type InfoHash = Checksum
@@ -54,6 +56,12 @@ sealed case class Checksum(sum: Array[Byte], algorithm: Algorithm) {
     MessageDigest.isEqual(sum, rec(length, other, 0, digester))
   }
   def compare(other: Array[Byte]): Boolean = MessageDigest.isEqual(sum, other)
+  def toHex:String = Hex.encodeHexString(sum)
+  override def hashCode:Int = Arrays.hashCode(sum)
+  override def equals(o: Any): Boolean = o match {
+    case Checksum(otherHash, Sha1) => MessageDigest.isEqual(otherHash, sum)
+    case _                         => false
+  }
 }
 object Checksum {
   def parse(raw: ByteBuffer, algorithm: Algorithm): Checksum = {

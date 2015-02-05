@@ -8,12 +8,14 @@ import java.nio.ByteBuffer
 import java.io.RandomAccessFile
 import java.nio.channels.FileChannel
 import java.nio.file.StandardOpenOption._
-import scala.collection.concurrent.Map
+import scala.collection.Map
 import com.spooky.bittorrent.metainfo.TorrentFile
 import scala.annotation.tailrec
 import java.nio.Buffer
 import com.spooky.bittorrent.model.TorrentFileState
 import java.util.concurrent.atomic.AtomicReference
+import com.spooky.bittorrent.metainfo.TorrentFile
+import java.nio.file.StandardOpenOption
 //import scala.collection.mutable.Map
 
 object TorrentFileManager {
@@ -21,13 +23,20 @@ object TorrentFileManager {
 }
 
 class TorrentFileManager private (torrent: Torrent, root: Path, have: AtomicReference[BitSet]) {
-  private lazy val channels = Map[Path, FileChannel]()
-  //  {
-  //      def apply(key: Path): Option[FileChannel] = {
-  //        null
-  //      }
-  //  }
+  private lazy val channels = toChannels(torrent).toMap
 
+  private def toChannels(torrent: Torrent): List[Tuple2[Path, FileChannel]] = {
+      @tailrec
+      def rec(files: List[TorrentFile], result: List[Tuple2[Path, FileChannel]]): List[Tuple2[Path, FileChannel]] = files match {
+        case Nil => result
+        case TorrentFile(filename, _) :: xs => {
+          val filePath = toAbsolute(filename)
+          val channel = FileChannel.open(filePath, StandardOpenOption.READ, StandardOpenOption.WRITE)
+          rec(xs, (filePath, channel) :: result)
+        }
+      }
+    rec(torrent.info.files, Nil)
+  }
   def have(index: Int): Boolean = {
     checkBounds(index)
     have.get.get(index)
@@ -49,8 +58,9 @@ class TorrentFileManager private (torrent: Torrent, root: Path, have: AtomicRefe
     val buffer = ByteBuffer.wrap(Array.ofDim[Byte](length))
     fileFor(index, begin, length).foreach({
       case Tuple3(path, offset, length) => {
-        val readers = channels.get(path).get
-        //        readers.transferTo(offset, length, buffer)
+        val channel = channels.get(path).get
+        //fills to buffer from offset. or if buffer is greater then channel content read till channel is empty
+        channel.read(buffer, offset)
       }
     })
     buffer.flip.asInstanceOf[ByteBuffer]
@@ -76,7 +86,7 @@ class TorrentFileManager private (torrent: Torrent, root: Path, have: AtomicRefe
     println("wtgf")
   }
   private def startOf(index: Int, begin: Int): Long = (index * blockSize) + begin
-  private def toAbsolute(file: String): Path = root.resolve(file)
+  private[file] def toAbsolute(file: String): Path = root.resolve(file)
   private def blockSize: Int = torrent.info.pieceLength
   private def get(): RandomAccessFile = {
     null

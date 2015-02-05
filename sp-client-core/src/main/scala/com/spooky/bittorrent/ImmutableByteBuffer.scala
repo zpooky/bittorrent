@@ -12,6 +12,7 @@ class ImmutableByteBuffer private (private val buffer: ByteBuffer) {
     case other: ByteBuffer          => buffer == other
     case other: Array[Byte]         => MessageDigest.isEqual(buffer.array(), other)
   }
+  override def toString:String = buffer.toString
 }
 object ImmutableByteBuffer {
   def apply(buffer: ByteBuffer): ImmutableByteBuffer = new ImmutableByteBuffer(buffer.slice())

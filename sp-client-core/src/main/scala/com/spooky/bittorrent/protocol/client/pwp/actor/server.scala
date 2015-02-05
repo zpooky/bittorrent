@@ -21,6 +21,19 @@ import com.spooky.bittorrent.protocol.client.pwp.api.Showable
 import com.spooky.bittorrent.protocol.client.pwp.api.Request
 import com.spooky.bittorrent.protocol.client.pwp.api.Piece
 import com.spooky.bittorrent.ImmutableByteBuffer
+import akka.event.Logging
+import com.spooky.bittorrent.model.PeerId
+import akka.io.Tcp
+import java.io.File
+import com.spooky.bittorrent.Config
+import java.nio.file.Files
+import java.nio.file.attribute.FileAttribute
+import java.nio.file.StandardOpenOption
+import com.spooky.bittorrent.protocol.client.pwp.api.KeepAlive
+import com.spooky.bittorrent.protocol.client.pwp.api.Unchoke
+import com.spooky.bittorrent.protocol.client.pwp.api.Have
+import com.spooky.bittorrent.protocol.client.pwp.api.Choke
+import com.spooky.bittorrent.protocol.client.pwp.api.Intrested
 
 abstract class PeerWireProtocolsActors(actorSystem: ActorSystem) {
   //  private val test: ActorRef = actorSystem.actorOf(Props[Test]())
@@ -28,71 +41,117 @@ abstract class PeerWireProtocolsActors(actorSystem: ActorSystem) {
 }
 //pstrlen:19|pstr:BitTorrent protocol|reserved:0000000000000000000000000000000000000000000100000000000000000000|info_has:Yj!ﾊXﾰ￾xﾀﾺFlￍﾉￊlwﾏ|peer-id:-lt0D20-Pﾖ￷ﾒﾛﾜￋ￿s
 
-class Test(client: InetSocketAddress, connection: ActorRef) extends Actor {
+class PeerWireProtocolMessageDeserializerActor(client: InetSocketAddress, connection: ActorRef) extends Actor {
+  private val log = new SimpleLog //Logging(context.system, this)
+  private var handler: ActorRef = null
   private var first = true
-  private var session: SessionManager = null
+
   override def receive = {
     case Received(data) => {
       //      println(":" + data)
       val buffer = data.toByteBuffer.order(ByteOrder.BIG_ENDIAN)
-      println("====================")
-      println(client.getHostString + "|" + first)
-      if (first) {
+      val cpy = buffer.duplicate
+      //      println(client.getHostString + "|" + first)
+      val cont: Boolean = if (first) {
         if (buffer.duplicate.get == 19) {
-          println("received: "+Handshake.parse(buffer.duplicate()))
           val handshake = Handshake.parse(buffer)
           first = false
-          handle.isDefinedAt(handshake)
-          println(handshake)
-          //        println(PeerWireMessage(data.toByteBuffer))
+          SessionManager.get(handshake.infoHash) match {
+            case Some(sessionManager) => {
+              log.debug(s"received: ${handshake}")
+              handler = context.actorOf(Props(classOf[PeerWireProtocolMessageActor], sessionManager, connection, handshake.peerId))
+              handler ! handshake
+              true
+            }
+            case None => {
+              debug(buffer.duplicate())
+              println(handshake)
+              log.warning("garbage received execpected handshake")
+              false
+            }
+          }
+        } else {
+          println(cpy)
+          val root = new File(new File(Config.getClass.getResource(".").toURI).getAbsoluteFile, "storage")
+          println(root)
+          Files.createDirectories(root.toPath)
+          val file = new File(root, s"${System.currentTimeMillis}.dat").toPath
+          println(file)
+          Files.write(file, cpy.array(), StandardOpenOption.CREATE_NEW)
+          false
         }
-        //        handle.isDefinedAt(PeerWireMessage(data.toByteBuffer))
-        //        buffer.position(buffer.capacity())
+      } else true
+      if (cont) {
+        //not a loop btw
+        for {
+          received <- PeerWireMessage(buffer)
+        } yield {
+          log.debug(s"received: ${received}")
+          handler ! received
+        }
+      } else {
+        connection ! Tcp.Close
       }
-      //      debug(buffer.duplicate)
-      //      println("before_" + buffer)
-      if (buffer.hasRemaining()) {
-        println("received: "+PeerWireMessage(buffer.duplicate()))
-        handle.isDefinedAt(PeerWireMessage(buffer))
-        //        println("after_" + buffer)
-      }
-      println("====================")
     }
     case (m: ConnectionClosed) => self ! PoisonPill
     case r                     => println("xAxAx:" + r)
   }
-  def handle: PartialFunction[PeerWireMessage, Unit] = {
+  //private def pwpHandler:Props =
+  def debug(buffer: ByteBuffer) {
+    val builder = StringBuilder.newBuilder
+    while (buffer.hasRemaining) {
+      builder.append((buffer.get & 0x7F).asInstanceOf[Char])
+    }
+    println("debug: " + builder.toString())
+  }
+}
+class PeerWireProtocolMessageActor(session: SessionManager, connection: ActorRef, peerId: PeerId) extends Actor {
+
+  private val log = new SimpleLog //Logging(context.system, this)
+  private val fileManager = session.fileManager
+
+  override def receive = {
     case Handshake(infoHash, _) => {
-      session = SessionManager.get(infoHash).get
       connection ! write(Handshake(infoHash, session.peerId))
-      val fileManager = session.fileManager
       if (fileManager.haveAnyBlocks) {
         connection ! write(Bitfield(fileManager.blocks))
       }
     }
     case Request(index, begin, length) => {
-      val fileManager = session.fileManager
-      if(fileManager.have(index)){
+      if (fileManager.have(index)) {
         connection ! write(Piece(index, begin, ImmutableByteBuffer(fileManager.read(index, begin, length))))
+      } else {
+        log.error(s"remote requested index ${index} but was not present")
       }
     }
-    case a => println("!!!!!" + a.getClass.getSimpleName)
+    case Bitfield(blocks) => connection ! write(Unchoke)
+    case Intrested        => connection ! write(Unchoke)
+    case KeepAlive        =>
+    case Have(index)      =>
+    case Choke            =>
+    case Unchoke          =>
+    case a                => log.debug(s"unahandled message: ${a.getClass.getSimpleName}")
   }
-  def write(message: Showable): Write ={
-    println("sent: "+message)
+
+  def write(message: Showable): Write = {
+    log.debug(s"sent ${message}")
     Write(message.toByteString)
   }
-  def debug(buffer: ByteBuffer) {
-    if (buffer.hasRemaining) {
-      val builder = StringBuilder.newBuilder
-      while (buffer.hasRemaining) {
-        builder.append((buffer.get & 0x7F).asInstanceOf[Char])
-      }
-      println("debug: " + builder.toString())
-    }
-  }
-}
-object Test extends HandlerProps {
-  def props(client: InetSocketAddress, connection: ActorRef) = Props(classOf[Test], client, connection)
 }
 
+object Test extends HandlerProps {
+  def props(client: InetSocketAddress, connection: ActorRef) = Props(classOf[PeerWireProtocolMessageDeserializerActor], client, connection)
+}
+
+class SimpleLog {
+  def debug(msg: String) {
+    println(msg)
+  }
+  def warning(msg: String) {
+    println(msg)
+  }
+  def error(msg: String) {
+    println(msg)
+  }
+
+}

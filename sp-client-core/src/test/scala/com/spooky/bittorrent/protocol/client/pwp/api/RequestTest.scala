@@ -36,8 +36,8 @@ class RequestTest extends FunSuite {
   }
   test("KeepAlive") {
     PeerWireMessage(KeepAlive.toByteBuffer) match {
-      case KeepAlive =>
-      case _         => fail()
+      case Some(KeepAlive) =>
+      case _               => fail()
     }
   }
   test("Handshake") {
@@ -46,40 +46,40 @@ class RequestTest extends FunSuite {
   }
   test("Choke") {
     PeerWireMessage(Choke.toByteBuffer) match {
-      case Choke =>
-      case _     => fail()
+      case Some(Choke) =>
+      case _           => fail()
     }
   }
   test("Unchoke") {
     PeerWireMessage(Unchoke.toByteBuffer) match {
-      case Unchoke =>
-      case _       => fail()
+      case Some(Unchoke) =>
+      case _             => fail()
     }
   }
   test("Intrested") {
     PeerWireMessage(Intrested.toByteBuffer) match {
-      case Intrested =>
-      case _         => fail()
+      case Some(Intrested) =>
+      case _               => fail()
     }
   }
   test("NotIntrested") {
     PeerWireMessage(NotIntrested.toByteBuffer) match {
-      case NotIntrested =>
-      case _            => fail()
+      case Some(NotIntrested) =>
+      case _                  => fail()
     }
   }
   test("Have") {
     val message = Have(1337)
     PeerWireMessage(message.toByteBuffer) match {
-      case Have(1337) =>
-      case _          => fail()
+      case Some(Have(1337)) =>
+      case _                => fail()
     }
 
   }
   test("Request") {
     val message = Request(1337, Integer.MAX_VALUE, Integer.MIN_VALUE)
     PeerWireMessage(message.toByteBuffer) match {
-      case Request(1337, Integer.MAX_VALUE, Integer.MIN_VALUE) =>
+      case Some(Request(1337, Integer.MAX_VALUE, Integer.MIN_VALUE)) =>
       case _ => fail()
     }
   }
@@ -91,15 +91,15 @@ class RequestTest extends FunSuite {
   test("Cancel") {
     val message = Cancel(4444, 77, 7323)
     PeerWireMessage(message.toByteBuffer) match {
-      case Cancel(4444, 77, 7323) =>
-      case _                      => fail()
+      case Some(Cancel(4444, 77, 7323)) =>
+      case _                            => fail()
     }
   }
   test("Port") {
     val message = Port(25555)
     PeerWireMessage(message.toByteBuffer) match {
-      case Port(25555) =>
-      case _           => fail()
+      case Some(Port(25555)) =>
+      case _                 => fail()
     }
   }
 }

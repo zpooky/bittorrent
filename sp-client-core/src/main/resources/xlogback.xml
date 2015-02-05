@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+	<logger name="akka" level="DEBUG" />
+
+	<!-- ERROR file -->
+	<appender name="errorFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<File>log/error-.log</File>
+		<append>true</append>
+		<filter class="ch.qos.logback.classic.filter.LevelFilter">
+			<level>ERROR</level>
+			<onMatch>ACCEPT</onMatch>
+			<onMismatch>DENY</onMismatch>
+		</filter>
+		<encoder>
+			<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+		</encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+			<maxIndex>10</maxIndex>
+			<FileNamePattern>log/archive/error.log.%i.gz</FileNamePattern>
+		</rollingPolicy>
+		<triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+			<maxFileSize>50MB</maxFileSize>
+		</triggeringPolicy>
+	</appender>
+	<root level="ERROR">
+		<appender-ref ref="errorFile" />
+	</root>
+
+	<!-- INFO file -->
+	<appender name="infoFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<File>log/info-.log</File>
+		<append>true</append>
+		<filter class="ch.qos.logback.classic.filter.LevelFilter">
+			<level>INFO</level>
+			<onMatch>ACCEPT</onMatch>
+			<onMismatch>DENY</onMismatch>
+		</filter>
+		<encoder>
+			<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+		</encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+			<maxIndex>10</maxIndex>
+			<FileNamePattern>log/archive/info.log.%i.gz</FileNamePattern>
+		</rollingPolicy>
+		<triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+			<maxFileSize>50MB</maxFileSize>
+		</triggeringPolicy>
+	</appender>
+	<root level="INFO">
+		<appender-ref ref="infoFile" />
+	</root>
+	
+	<!-- DEBUG file -->
+	<appender name="debugFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<File>log/debug-.log</File>
+		<append>true</append>
+		<filter class="ch.qos.logback.classic.filter.LevelFilter">
+			<level>DEBUG</level>
+			<onMatch>ACCEPT</onMatch>
+			<onMismatch>DENY</onMismatch>
+		</filter>
+		<encoder>
+			<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+		</encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+			<maxIndex>10</maxIndex>
+			<FileNamePattern>log/archive/debug.log.%i.gz</FileNamePattern>
+		</rollingPolicy>
+		<triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+			<maxFileSize>50MB</maxFileSize>
+		</triggeringPolicy>
+	</appender>
+	<root level="DEBUG">
+		<appender-ref ref="debugFile" />
+	</root>
+
+	<!-- WARNING file -->
+	<appender name="warningFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<File>log/warning-.log</File>
+		<append>true</append>
+		<filter class="ch.qos.logback.classic.filter.LevelFilter">
+			<level>WARNING</level>
+			<onMatch>ACCEPT</onMatch>
+			<onMismatch>DENY</onMismatch>
+		</filter>
+		<encoder>
+			<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+		</encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+			<maxIndex>10</maxIndex>
+			<FileNamePattern>log/archive/warning.log.%i.gz</FileNamePattern>
+		</rollingPolicy>
+		<triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+			<maxFileSize>50MB</maxFileSize>
+		</triggeringPolicy>
+	</appender>
+	<root level="WARNING">
+		<appender-ref ref="warningFile" />
+	</root>
+
+
+</configuration>
