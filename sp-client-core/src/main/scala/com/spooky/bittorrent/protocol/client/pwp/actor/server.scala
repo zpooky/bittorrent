@@ -1,5 +1,6 @@
 package com.spooky.bittorrent.protocol.client.pwp.actor
 
+import scala.collection.JavaConversions._
 import akka.actor.ActorSystem
 import akka.actor.ActorRef
 import akka.actor.Props
@@ -34,6 +35,12 @@ import com.spooky.bittorrent.protocol.client.pwp.api.Unchoke
 import com.spooky.bittorrent.protocol.client.pwp.api.Have
 import com.spooky.bittorrent.protocol.client.pwp.api.Choke
 import com.spooky.bittorrent.protocol.client.pwp.api.Intrested
+import akka.io.Tcp.CommandFailed
+import akka.util.ByteString
+import scala.collection.mutable.PriorityQueue
+import java.util.concurrent.PriorityBlockingQueue
+import akka.io.Tcp.Event
+import com.spooky.bittorrent.protocol.client.pwp.api.NotIntrested
 
 abstract class PeerWireProtocolsActors(actorSystem: ActorSystem) {
   //  private val test: ActorRef = actorSystem.actorOf(Props[Test]())
@@ -45,6 +52,9 @@ class PeerWireProtocolMessageDeserializerActor(client: InetSocketAddress, connec
   private val log = new SimpleLog //Logging(context.system, this)
   private var handler: ActorRef = null
   private var first = true
+
+  // sign death pact: this actor terminates when connection breaks
+  context watch connection
 
   override def receive = {
     case Received(data) => {
@@ -65,36 +75,38 @@ class PeerWireProtocolMessageDeserializerActor(client: InetSocketAddress, connec
             }
             case None => {
               debug(buffer.duplicate())
-              println(handshake)
+              log.error(handshake)
               log.warning("garbage received execpected handshake")
               false
             }
           }
         } else {
-          println(cpy)
+          log.error(s"handshake failed ${cpy}")
           val root = new File(new File(Config.getClass.getResource(".").toURI).getAbsoluteFile, "storage")
-          println(root)
+          log.error(root)
           Files.createDirectories(root.toPath)
           val file = new File(root, s"${System.currentTimeMillis}.dat").toPath
-          println(file)
+          log.error(file)
           Files.write(file, cpy.array(), StandardOpenOption.CREATE_NEW)
           false
         }
       } else true
       if (cont) {
-        //not a loop btw
-        for {
-          received <- PeerWireMessage(buffer)
-        } yield {
-          log.debug(s"received: ${received}")
-          handler ! received
+        while (buffer.hasRemaining()) {
+          for {
+            received <- PeerWireMessage(buffer)
+          } yield {
+            log.debug(s"received: ${received}")
+            handler ! received
+          }
         }
+        //        log.error(s"tail:${buffer}")
       } else {
         connection ! Tcp.Close
       }
     }
-    case (m: ConnectionClosed) => self ! PoisonPill
-    case r                     => println("xAxAx:" + r)
+    //    case (m: ConnectionClosed) => self ! PoisonPill
+    case r => log.error("xAxAx:" + r)
   }
   //private def pwpHandler:Props =
   def debug(buffer: ByteBuffer) {
@@ -102,40 +114,98 @@ class PeerWireProtocolMessageDeserializerActor(client: InetSocketAddress, connec
     while (buffer.hasRemaining) {
       builder.append((buffer.get & 0x7F).asInstanceOf[Char])
     }
-    println("debug: " + builder.toString())
+    log.error(s"debug: ${builder}")
   }
 }
+case class Ack(sequence:Int) extends Event
 class PeerWireProtocolMessageActor(session: SessionManager, connection: ActorRef, peerId: PeerId) extends Actor {
 
   private val log = new SimpleLog //Logging(context.system, this)
   private val fileManager = session.fileManager
 
-  override def receive = {
+  def Ordering = new Ordering[Tuple2[ByteString,Int]] {
+    def compare(a : Tuple2[ByteString,Int], b : Tuple2[ByteString,Int]) = a._2.compare(b._2)
+  }
+  private lazy val buffer = scala.collection.mutable.PriorityQueue[Tuple2[ByteString,Int]]()(Ordering)
+  private var outstanding = 0
+  private var buffering = false
+  private var sequence = 0
+
+  override def receive: PartialFunction[Any, Unit] = {
     case Handshake(infoHash, _) => {
-      connection ! write(Handshake(infoHash, session.peerId))
+      write(Handshake(infoHash, session.peerId))
       if (fileManager.haveAnyBlocks) {
-        connection ! write(Bitfield(fileManager.blocks))
+        write(Bitfield(fileManager.blocks))
       }
     }
     case Request(index, begin, length) => {
       if (fileManager.have(index)) {
-        connection ! write(Piece(index, begin, ImmutableByteBuffer(fileManager.read(index, begin, length))))
+        write(Piece(index, begin, ImmutableByteBuffer(fileManager.read(index, begin, length))))
       } else {
         log.error(s"remote requested index ${index} but was not present")
       }
     }
-    case Bitfield(blocks) => connection ! write(Unchoke)
-    case Intrested        => connection ! write(Unchoke)
+    case Bitfield(blocks) => write(Unchoke)
+    case Intrested        => write(Unchoke)
     case KeepAlive        =>
     case Have(index)      =>
     case Choke            =>
     case Unchoke          =>
-    case a                => log.debug(s"unahandled message: ${a.getClass.getSimpleName}")
+    case CommandFailed(w: Write) => {
+      val m = w.wantsAck
+      //      connection ! ResumeWriting
+      //      context become buffering(ack)
+      log.error("O/S buffer was full|" + m + "|" + outstanding+"|"+buffering+":"+w.ack)
+      outstanding = (outstanding - 1)
+      buffering = true
+      write(w.data)
+    }
+    case a:Ack => {
+//      log.error(a)
+      outstanding = (outstanding - 1)
+      checkBuffer
+    }
+    case p: CommandFailed => log.error(p.cmd.failureMessage)
+    case Tcp.PeerClosed => {
+      println("outstanding:"+outstanding)
+      context stop self
+    }
+    case NotIntrested => {
+      println("outstanding:"+outstanding)
+    }
+    case a => log.error(s"unahandled message: ${a.getClass}")
   }
 
-  def write(message: Showable): Write = {
-    log.debug(s"sent ${message}")
-    Write(message.toByteString)
+  //    private def buffering: PartialFunction[Any, Unit] = {
+  //      case _ =>
+  //    }
+
+  private def write(message: Showable): Unit = write(message.toByteString)
+  private def write(message: ByteString): Unit = buffering match {
+    case true => {
+      _buffer((message,getSequence))
+    }
+    case false => {
+      outstanding = (outstanding + 1)
+      log.debug(s"sent ${message}")
+      connection ! Write(message, Ack(getSequence))
+    }
+  }
+  private def _buffer(message:Tuple2[ByteString,Int]):Unit = {
+      buffer += message
+      checkBuffer
+  }
+  private def getSequence:Int ={
+    sequence = sequence+1
+    sequence
+  }
+  private def checkBuffer: Unit = {
+    if (outstanding == 0 || buffer.size >= 15) {
+      buffering = false
+      Range(0, buffer.length).foreach { _ =>
+        write(buffer.dequeue()._1)
+      }
+    }
   }
 }
 
@@ -144,13 +214,13 @@ object Test extends HandlerProps {
 }
 
 class SimpleLog {
-  def debug(msg: String) {
+  def debug(msg: Any) {
+    //    println(msg)
+  }
+  def warning(msg: Any) {
     println(msg)
   }
-  def warning(msg: String) {
-    println(msg)
-  }
-  def error(msg: String) {
+  def error(msg: Any) {
     println(msg)
   }
 

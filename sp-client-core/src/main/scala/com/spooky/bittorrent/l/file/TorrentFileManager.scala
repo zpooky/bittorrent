@@ -42,6 +42,7 @@ class TorrentFileManager private (torrent: Torrent, root: Path, have: AtomicRefe
     have.get.get(index)
   }
   def haveAnyBlocks: Boolean = {
+      @tailrec
       def rec(set: BitSet, index: Int): Boolean = {
         if (set.size == index) {
           false

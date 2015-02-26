@@ -65,7 +65,7 @@ object PeerWireMessage {
     } else {
       val dup = buffer.duplicate.get & 0xFF
       val length = buffer.getInt
-      println("length::::::" + length + "|" + dup)
+        //      println("length::::::" + length + "|" + dup)
         implicit def toOption[T](any: T): Option[T] = Option(any)
       if (length == 0) {
         KeepAlive
@@ -152,9 +152,7 @@ case class Bitfield(blocks: BitSet) extends PeerWireMessage with Showable {
     buffer.putInt(bitsetArr.length + 1)
     buffer.put(5.asInstanceOf[Byte])
     buffer.put(bitsetArr)
-    println(buffer)
     val b = buffer.flip().asInstanceOf[ByteBuffer]
-    println(b)
     b
   }
 }
@@ -217,7 +215,14 @@ object Have {
 object Bitfield {
   private[api] def parse(length: Int, buffer: ByteBuffer): Bitfield = {
     val limit = buffer.limit
-    val bitfield = Bitfield(BitSet.valueOf(buffer.duplicate().limit(buffer.position + length).asInstanceOf[ByteBuffer]))
+    val bitfield = try {
+      Bitfield(BitSet.valueOf(buffer.duplicate().limit(buffer.position + length).asInstanceOf[ByteBuffer]))
+    } catch {
+      case e: IllegalArgumentException => {
+        println(buffer.position()+"|"+length+"|"+(buffer.position + length)+"|"+buffer)
+        throw e
+      }
+    }
     buffer.position(limit)
     bitfield
   }
