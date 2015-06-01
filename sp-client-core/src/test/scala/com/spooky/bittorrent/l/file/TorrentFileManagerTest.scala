@@ -8,10 +8,11 @@ import java.nio.channels.FileChannel
 import java.nio.file.StandardOpenOption
 import java.nio.ByteBuffer
 import java.security.MessageDigest
+import com.spooky.bittorrent.metainfo.Torrents
 
 class TorrentFileManager_SingleFileTest extends FunSuite {
   val file = new File(TorrentFileManager.getClass.getResource("/debian.torrent").toURI)
-  val torrent = Torrent(file)
+  val torrent = Torrents(file)
   val root = Paths.get("P:\\tmp\\t")
   lazy val stat = new FileInitiator2(torrent, root).state()
 

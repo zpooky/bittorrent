@@ -1,6 +1,7 @@
-package com.spooky.bittorrent
+package com.spooky.bittorrent.mse
 
 import java.nio.ByteBuffer
+import com.spooky.bittorrent.RawWrapper
 
 sealed case class PublicKey(override val raw: Array[Byte]) extends RawWrapper(raw)
   object PublicKey extends Base {

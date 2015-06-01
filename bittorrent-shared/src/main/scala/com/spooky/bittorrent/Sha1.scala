@@ -5,6 +5,7 @@ import java.nio.ByteBuffer
 import scala.util.Random
 import scala.annotation.tailrec
 import org.apache.commons.codec.binary.Hex
+import com.spooky.bittorrent.mse.SharedSecretKey
 
 
 sealed case class Sha1(raw: Array[Byte]) {

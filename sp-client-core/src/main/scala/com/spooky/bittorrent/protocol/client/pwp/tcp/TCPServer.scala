@@ -17,7 +17,9 @@ class TCPServer(handlerProps: HandlerProps) extends Actor {
   IO(Tcp) ! Tcp.Bind(self, new InetSocketAddress(Config.hostname, Config.peerWireProtocolPort))
 
   override def receive = {
-    case Tcp.CommandFailed(_: Tcp.Bind) => context stop self
+    case Tcp.CommandFailed(_: Tcp.Bind) => {
+      context stop self
+    }
 
     case Tcp.Connected(remote, local) =>
       val handler = context.actorOf(handlerProps.props(remote, sender))

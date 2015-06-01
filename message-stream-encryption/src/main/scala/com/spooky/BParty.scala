@@ -9,14 +9,14 @@ import java.util.Arrays
 import java.security.MessageDigest
 import java.nio.ByteOrder
 import com.spooky.bittorrent.InfoHash
-import com.spooky.bittorrent.LocalSecret
-import com.spooky.bittorrent.PublicKey
-import com.spooky.bittorrent.SharedSecretKey
-import com.spooky.bittorrent.BRc4Key
-import com.spooky.bittorrent.ARc4Key
+import com.spooky.bittorrent.mse.LocalSecret
+import com.spooky.bittorrent.mse.PublicKey
+import com.spooky.bittorrent.mse.SharedSecretKey
+import com.spooky.bittorrent.mse.BRc4Key
+import com.spooky.bittorrent.mse.ARc4Key
 import com.spooky.bittorrent.Sha1
-import com.spooky.bittorrent.Padding
-import com.spooky.bittorrent.Base
+import com.spooky.bittorrent.mse.Padding
+import com.spooky.bittorrent.mse.Base
 
 //1 A->B: Diffie Hellman Ya, PadA
 //2 B->A: Diffie Hellman Yb, PadB

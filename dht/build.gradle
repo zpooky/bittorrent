@@ -9,3 +9,16 @@ repositories {
 dependencies {
    compile 'com.typesafe.akka:akka-actor_2.11:2.3.6'
 }
+
+eclipse {
+	project {
+			}
+	classpath {
+			  file {
+					withXml {
+								  def node = it.asNode()
+								  node.appendNode('classpathentry', [combineaccessrules: 'false',kind:'src', path:'/bittorrent-shared'])
+						  }
+				  }
+		  }
+  }

@@ -6,6 +6,7 @@ import java.lang.management.ManagementFactory
 import java.nio.file.Paths
 import com.spooky.bittorrent.model.TorrentSetup
 import org.apache.commons.codec.binary.Hex
+import com.spooky.bittorrent.metainfo.Torrents
 
 object BittorrentClient {
   def main(args: Array[String]) {
@@ -14,7 +15,7 @@ object BittorrentClient {
     //    val peers = provider.get(5)
 //    val file = new File(BittorrentClient.getClass.getResource("/local-debian.torrent").toURI)
     val file = new File(BittorrentClient.getClass.getResource("/debian.torrent").toURI)
-    val torrent = Torrent(file)
+    val torrent = Torrents(file)
     println("infoHash:"+torrent.infoHash)
     val setup = TorrentSetup(torrent, Paths.get("P:\\tmp\\t"))
     val ref = BittorrentAPI.start(setup)

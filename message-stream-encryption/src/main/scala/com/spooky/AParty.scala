@@ -1,17 +1,17 @@
 package com.spooky
 
 import com.spooky.bittorrent.InfoHash
-import com.spooky.bittorrent.LocalSecret
-import com.spooky.bittorrent.PublicKey
-import com.spooky.bittorrent.SharedSecretKey
-import com.spooky.bittorrent.ARc4Key
-import com.spooky.bittorrent.BRc4Key
+import com.spooky.bittorrent.mse.LocalSecret
+import com.spooky.bittorrent.mse.PublicKey
+import com.spooky.bittorrent.mse.SharedSecretKey
+import com.spooky.bittorrent.mse.ARc4Key
+import com.spooky.bittorrent.mse.BRc4Key
 import com.spooky.bittorrent.Sha1
 import com.sun.crypto.provider.Padding
-import com.spooky.bittorrent.Padding
+import com.spooky.bittorrent.mse.Padding
 import java.nio.ByteOrder
 import java.nio.ByteBuffer
-import com.spooky.bittorrent.Base
+import com.spooky.bittorrent.mse.Base
 import com.spooky.rc4.Codec
 import org.apache.commons.codec.binary.Hex
 

@@ -1,6 +1,7 @@
-package com.spooky.bittorrent
+package com.spooky.bittorrent.mse
 
 import org.apache.commons.codec.binary.Hex
+import com.spooky.bittorrent.RawWrapper
 
 sealed case class SharedSecretKey(override val raw: Array[Byte]) extends RawWrapper(raw)
 object SharedSecretKey extends Base {

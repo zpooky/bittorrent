@@ -13,25 +13,14 @@ import com.google.gson.GsonBuilder
 import com.google.gson.Gson
 import org.apache.commons.codec.binary.Hex
 import java.util.Arrays
-import com.spooky.bittorrent.Checksum
 import com.spooky.bencode.TorrentFileStream
+import com.spooky.bittorrent.Checksum
 import com.spooky.bencode._
 import com.spooky.bittorrent.Sha1
 import com.spooky.bittorrent.InfoHash
 import com.spooky.bittorrent.InfoHashs
 
-//object Torrents {
-//  type InfoHash = Checksum
-//}
-
-case class Info(pieceLength: Int, length: Long, files: List[TorrentFile], pieces: List[Checksum], priv: Boolean, rootHash: Option[Checksum])
-case class Node(host: String, port: Int)
-case class Tracker(announce: String)
-case class TorrentFile(name: String, bytes: Long)
-case class Torrent(infoHash: InfoHash, info: Info, nodes: List[Node], trackers: Set[Tracker], creationDate: Option[String], comment: Option[String], createdBy: Option[String], encoding: Option[String], httpSeeds: List[URL]) extends Metainfo {
-  //  override def toString: String = new GsonBuilder().setPrettyPrinting().create().toJson(this)
-}
-object Torrent {
+object Torrents {
   def apply(torrent: File): Torrent = {
     val stream = TorrentFileStream(torrent)
     //		println(torrent)1
@@ -128,7 +117,7 @@ object Torrent {
   def main(args: Array[String]): Unit = {
     val url = getClass.getResource("/debian.torrent")
     val file = new File(url.toURI())
-    val t = Torrent(new File("D:\\torrent\\Community.S05E01.HDTV.x264-LOL.mp4.torrent"))
+    val t = Torrents(new File("D:\\torrent\\Community.S05E01.HDTV.x264-LOL.mp4.torrent"))
     //    println(Base64.getEncoder.encodeToString(t.infoHash.sum))
     println("%40%CA%3F%3E%28%EA_%89%F3%29qv%D7%813%08R%9E%12%1A")
     val codec = new URLCodec

@@ -54,6 +54,7 @@ eclipse {
 				node.appendNode('classpathentry', [combineaccessrules: 'false',kind:'src', path:'/bittorrent-shared'])
 				node.appendNode('classpathentry', [combineaccessrules: 'false',kind:'src', path:'/message-stream-encryption'])
 				node.appendNode('classpathentry', [combineaccessrules: 'false',kind:'src', path:'/bencode'])
+				node.appendNode('classpathentry', [combineaccessrules: 'false',kind:'src', path:'/dht'])
 			}
 		}
 	}

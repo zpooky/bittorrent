@@ -10,7 +10,7 @@ import org.apache.commons.codec.binary.Hex
 import java.nio.charset.Charset
 import java.security.MessageDigest
 import com.spooky.rc4.Codec
-import com.spooky.bittorrent.Rc4Key
+import com.spooky.bittorrent.mse.Rc4Key
 
 object Rc4Stock {
 

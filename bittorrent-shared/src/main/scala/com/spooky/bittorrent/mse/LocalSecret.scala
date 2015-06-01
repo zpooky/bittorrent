@@ -1,6 +1,7 @@
-package com.spooky.bittorrent
+package com.spooky.bittorrent.mse
 
 import scala.util.Random
+import com.spooky.bittorrent.RawWrapper
 
 sealed case class LocalSecret(override val raw: Array[Byte]) extends RawWrapper(raw)
 object LocalSecret {

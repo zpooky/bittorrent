@@ -1,6 +1,8 @@
 package com.spooky.dht
 
 import java.math.BigInteger
+import com.spooky.bittorrent.InfoHash
+import com.spooky.bittorrent.metainfo.Torrent
 
 object DHT {
   //bootstrap nodes

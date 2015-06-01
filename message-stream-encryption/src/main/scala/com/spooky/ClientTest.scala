@@ -6,7 +6,7 @@ import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import com.spooky.bittorrent.InfoHash
-import com.spooky.bittorrent.PublicKey
+import com.spooky.bittorrent.mse.PublicKey
 import java.nio.charset.Charset
 
 object ClientTest {

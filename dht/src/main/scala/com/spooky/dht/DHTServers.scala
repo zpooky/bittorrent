@@ -6,22 +6,26 @@ import akka.actor.ActorRef
 import akka.actor.Props
 import akka.io.IO
 import akka.io.Udp
+import com.spooky.bittorrent.Config
 
-class DHTServer(handlerProps: HandlerProps) extends Actor {
+class DHTServer(handlerProps: DHTHandlerProps) extends Actor {
   import context.system
-  IO(Udp) ! Udp.SimpleSender
+  IO(Udp) ! Udp.Bind(self, new InetSocketAddress(Config.hostname, Config.dhtPort))
 
   def receive = {
+    case Udp.CommandFailed(_: Udp.Bind) => {
+      context stop self
+    }
     case Udp.SimpleSenderReady =>
-//      val handler = context.actorOf(handlerProps.props(remote, sender))
-      context.become(ready(sender()))
+      val handler = context.actorOf(handlerProps.props(sender))
+      context.become(ready(handler))
   }
 
-  //  def ready(send: ActorRef): Receive = {
-  //    case msg: String =>
-  //      send ! Udp.Send(ByteString(msg), remote)
-  //  }
+  def ready(send: ActorRef): Receive = {
+    case r =>
+      send ! r
+  }
 }
-trait HandlerProps {
-  def props(client: InetSocketAddress, connection: ActorRef): Props
+trait DHTHandlerProps {
+  def props(connection: ActorRef): Props
 }

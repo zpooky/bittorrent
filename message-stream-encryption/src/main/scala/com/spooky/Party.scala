@@ -1,6 +1,6 @@
 package com.spooky
 
-import com.spooky.bittorrent.PublicKey
+import com.spooky.bittorrent.mse.PublicKey
 
 trait Party {
 

@@ -27,5 +27,5 @@ object Token {
 case class Token(s: String, d: LocalDateTime)
 
 //PLACEHOLDEr
-case class InfoHash(s: Array[Byte])
-abstract class Torrent
+//case class InfoHash(s: Array[Byte])
+//abstract class Torrent

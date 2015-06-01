@@ -1,4 +1,4 @@
-package com.spooky.bittorrent
+package com.spooky.bittorrent.mse
 
 import java.security.MessageDigest
 import com.spooky.bittorrent.data.SKey

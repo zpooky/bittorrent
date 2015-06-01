@@ -13,10 +13,10 @@ import scala.util.Random
 import scala.annotation.tailrec
 import org.apache.commons.codec.binary.Hex
 import java.nio.charset.Charset
-import com.spooky.bittorrent.LocalSecret
-import com.spooky.bittorrent.PublicKey
+import com.spooky.bittorrent.mse.LocalSecret
+import com.spooky.bittorrent.mse.PublicKey
 import com.spooky.bittorrent.InfoHash
-import com.spooky.bittorrent.SharedSecretKey
+import com.spooky.bittorrent.mse.SharedSecretKey
 
 object Testx {
   def main(args: Array[String]): Unit = {

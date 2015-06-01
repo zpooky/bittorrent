@@ -1,5 +1,7 @@
 package com.spooky.dht
 
+import com.spooky.bittorrent.InfoHash
+
 abstract class Request(nodeId: NodeId)
 abstract class Response(nodeId: NodeId)
 

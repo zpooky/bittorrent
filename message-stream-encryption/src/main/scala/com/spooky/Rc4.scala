@@ -8,7 +8,7 @@ import scala.util.Random
 import scala.util.Try
 import scala.annotation.tailrec
 import java.math.BigInteger
-import com.spooky.bittorrent.Rc4Key
+import com.spooky.bittorrent.mse.Rc4Key
 
 object rc4 {
   private val dh_prime = Array[Byte]( //

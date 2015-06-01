@@ -41,7 +41,7 @@ import java.util.concurrent.PriorityBlockingQueue
 import akka.io.Tcp.Event
 import com.spooky.bittorrent.protocol.client.pwp.api.NotIntrested
 import com.spooky.BParty
-import com.spooky.bittorrent.PublicKey
+import com.spooky.bittorrent.mse.PublicKey
 import com.spooky.bittorrent.l.session.SessionManager
 import com.spooky.bittorrent.l.session.Session
 import com.spooky.bittorrent.u.BufferingRetry
