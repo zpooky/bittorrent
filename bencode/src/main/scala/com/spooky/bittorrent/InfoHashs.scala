@@ -1,18 +1,26 @@
-package com.spooky.bittorrent.bencode
+package com.spooky.bittorrent
 
-import com.spooky.bittorrent.metainfo.Checksum
 import java.security.MessageDigest
-import com.spooky.bittorrent.bencode.wtf._
-import com.spooky.bittorrent.metainfo.Sha1
+import com.spooky.bencode.wtf._
 import scala.annotation.tailrec
+import com.spooky.bencode.BStream
+import com.spooky.bencode.BString
+import com.spooky.bencode.BytesBuilder
+import org.apache.commons.codec.binary.Hex
+import java.nio.charset.Charset
+import org.apache.commons.codec.binary.Hex
+import com.spooky.bencode.Bencode
 
-object InfoHash {
+object InfoHashs {
+  def hex(hex: String): InfoHash = InfoHash(Hex.decodeHex(hex.toCharArray()))
+  def apply(sha1:Sha1): InfoHash = InfoHash(sha1.raw)
+
   val bencode = Bencode
-  def hash(stream: BStream): Checksum = {
+  def hash(stream: BStream): InfoHash = {
     val hasher = MessageDigest.getInstance("sha1")
     val info = subInfo(stream)
     val digest = hasher.digest(info)
-    Checksum(digest, Sha1)
+    InfoHash(digest)
   }
   @tailrec
   private def subInfo(stream: BStream): Array[Byte] = stream match {
@@ -31,26 +39,26 @@ object InfoHash {
     case _            => throw new RuntimeException("info value is not a dictionary")
   }
   private def decodeDictionary(stream: BStream, builder: BytesBuilder): Tuple2[BStream, BytesBuilder] = {
-    @tailrec
-    def decode(stream: BStream, builder: BytesBuilder): Tuple2[BStream, BytesBuilder] = stream match {
-      case stream if stream.isEmpty => throw new RuntimeException("stream is empty")
-      case 'e' %:: tail             => (tail, builder += stream.headByte)
-      case stream => {
-        val keyResult = decodeString(stream, builder)
-        val valueResult = doDecode(keyResult._1, keyResult._2)
-        decode(valueResult._1, builder)
+      @tailrec
+      def decode(stream: BStream, builder: BytesBuilder): Tuple2[BStream, BytesBuilder] = stream match {
+        case stream if stream.isEmpty => throw new RuntimeException("stream is empty")
+        case 'e' %:: tail             => (tail, builder += stream.headByte)
+        case stream => {
+          val keyResult = decodeString(stream, builder)
+          val valueResult = doDecode(keyResult._1, keyResult._2)
+          decode(valueResult._1, builder)
+        }
       }
-    }
     decode(stream, builder)
   }
 
   def decodeString(stream: BStream, builder: BytesBuilder): Tuple2[BStream, BytesBuilder] = {
-    @tailrec
-    def decode(stream: BStream, length: Int, builder: BytesBuilder): Tuple2[BStream, BytesBuilder] = stream match {
-      case stream if length == 0    => (stream, builder)
-      case stream if stream.isEmpty => throw new RuntimeException("unexpected end of stream")
-      case c %:: tail               => decode(tail, length - 1, builder += stream.headByte)
-    }
+      @tailrec
+      def decode(stream: BStream, length: Int, builder: BytesBuilder): Tuple2[BStream, BytesBuilder] = stream match {
+        case stream if length == 0    => (stream, builder)
+        case stream if stream.isEmpty => throw new RuntimeException("unexpected end of stream")
+        case c %:: tail               => decode(tail, length - 1, builder += stream.headByte)
+      }
     val length = getLength(stream, StringBuilder.newBuilder, builder)
     decode(length._1, length._2, length._3)
   }
@@ -71,25 +79,25 @@ object InfoHash {
   }
 
   private def decodeInteger(stream: BStream, builder: BytesBuilder): Tuple2[BStream, BytesBuilder] = {
-    @tailrec
-    def decode(stream: BStream, builder: StringBuilder, bbuilder: BytesBuilder): Tuple2[BStream, BytesBuilder] = stream match {
-      case stream if stream.isEmpty            => throw new RuntimeException("unexpected enf of stream: " + builder.toString)
-      case c %:: tail if c.isDigit || c == '-' => decode(tail, builder.append(c), bbuilder += stream.headByte)
-      case 'i' %:: tail                        => decode(tail, builder, bbuilder += stream.headByte)
-      case 'e' %:: tail                        => (tail, bbuilder += stream.headByte)
-      case _                                   => throw new RuntimeException("not matched")
-    }
+      @tailrec
+      def decode(stream: BStream, builder: StringBuilder, bbuilder: BytesBuilder): Tuple2[BStream, BytesBuilder] = stream match {
+        case stream if stream.isEmpty            => throw new RuntimeException("unexpected enf of stream: " + builder.toString)
+        case c %:: tail if c.isDigit || c == '-' => decode(tail, builder.append(c), bbuilder += stream.headByte)
+        case 'i' %:: tail                        => decode(tail, builder, bbuilder += stream.headByte)
+        case 'e' %:: tail                        => (tail, bbuilder += stream.headByte)
+        case _                                   => throw new RuntimeException("not matched")
+      }
     return decode(stream, StringBuilder.newBuilder, builder)
   }
   private def decodeList(stream: BStream, builder: BytesBuilder): Tuple2[BStream, BytesBuilder] = {
-    @tailrec
-    def decode(stream: BStream, builder: BytesBuilder): Tuple2[BStream, BytesBuilder] = stream match {
-      case 'e' %:: tail => (tail, builder += stream.headByte)
-      case stream => {
-        val result = doDecode(stream, builder)
-        decode(result._1, result._2)
+      @tailrec
+      def decode(stream: BStream, builder: BytesBuilder): Tuple2[BStream, BytesBuilder] = stream match {
+        case 'e' %:: tail => (tail, builder += stream.headByte)
+        case stream => {
+          val result = doDecode(stream, builder)
+          decode(result._1, result._2)
+        }
       }
-    }
     decode(stream, builder)
   }
 }

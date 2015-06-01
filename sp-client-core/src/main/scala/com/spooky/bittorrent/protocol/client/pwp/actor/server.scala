@@ -15,7 +15,6 @@ import com.spooky.bittorrent.protocol.client.pwp.tcp.HandlerProps
 import java.net.InetSocketAddress
 import java.nio.ByteOrder
 import java.nio.ByteBuffer
-import com.spooky.bittorrent.l.SessionManager
 import akka.io.Tcp.Write
 import com.spooky.bittorrent.protocol.client.pwp.api.Bitfield
 import com.spooky.bittorrent.protocol.client.pwp.api.Showable
@@ -41,6 +40,13 @@ import scala.collection.mutable.PriorityQueue
 import java.util.concurrent.PriorityBlockingQueue
 import akka.io.Tcp.Event
 import com.spooky.bittorrent.protocol.client.pwp.api.NotIntrested
+import com.spooky.BParty
+import com.spooky.bittorrent.PublicKey
+import com.spooky.bittorrent.l.session.SessionManager
+import com.spooky.bittorrent.l.session.Session
+import com.spooky.bittorrent.u.BufferingRetry
+import com.spooky.bittorrent.l.session.Session
+import com.spooky.bittorrent.l.session.client.ClientSession
 
 abstract class PeerWireProtocolsActors(actorSystem: ActorSystem) {
   //  private val test: ActorRef = actorSystem.actorOf(Props[Test]())
@@ -67,9 +73,9 @@ class PeerWireProtocolMessageDeserializerActor(client: InetSocketAddress, connec
           val handshake = Handshake.parse(buffer)
           first = false
           SessionManager.get(handshake.infoHash) match {
-            case Some(sessionManager) => {
+            case Some(session) => {
               log.debug(s"received: ${handshake}")
-              handler = context.actorOf(Props(classOf[PeerWireProtocolMessageActor], sessionManager, connection, handshake.peerId))
+              handler = context.actorOf(Props(classOf[PeerWireProtocolMessageActor], session, connection, handshake.peerId))
               handler ! handshake
               true
             }
@@ -80,25 +86,45 @@ class PeerWireProtocolMessageDeserializerActor(client: InetSocketAddress, connec
               false
             }
           }
-        } else {
-          log.error(s"handshake failed ${cpy}")
-          val root = new File(new File(Config.getClass.getResource(".").toURI).getAbsoluteFile, "storage")
-          log.error(root)
-          Files.createDirectories(root.toPath)
-          val file = new File(root, s"${System.currentTimeMillis}.dat").toPath
-          log.error(file)
-          Files.write(file, cpy.array(), StandardOpenOption.CREATE_NEW)
+        } else { //Encrypted
+          val sessionManager = SessionManager.test
+          //            val b = new BParty(sessionManager.infoHash)
+          //            b.receivePublic(PublicKey.raw(buffer))
+          //
+          //            a.receivePublic(b.sendPublic)
+          //
+          //                println("----")
+          //                b.receive(a.send)
+          //                a.receive(b.send)
+          //
+          //                b._3(a._3)
+          //
+          //                println("----")
+          //                b.receive(a.send)
+          //                a.receive(b.send)
+          //
+          //                a._4(b._4)
+          //
+          //                println("----")
+          //                b.receive(a.send)
+          //                a.receive(b.send)
+
+          //          log.error(s"handshake failed ${cpy}")
+          //          val root = new File(new File(Config.getClass.getResource(".").toURI).getAbsoluteFile, "storage")
+          //          log.error(root)
+          //          Files.createDirectories(root.toPath)
+          //          val file = new File(root, s"${System.currentTimeMillis}.dat").toPath
+          //          log.error(file)
+          //          Files.write(file, cpy.array(), StandardOpenOption.CREATE_NEW)
           false
         }
       } else true
       if (cont) {
-        while (buffer.hasRemaining()) {
-          for {
-            received <- PeerWireMessage(buffer)
-          } yield {
-            log.debug(s"received: ${received}")
-            handler ! received
-          }
+        for {
+          received <- PeerWireMessage.parse(buffer)
+        } yield {
+          log.debug(s"received: ${received}")
+          handler ! received
         }
         //        log.error(s"tail:${buffer}")
       } else {
@@ -106,7 +132,7 @@ class PeerWireProtocolMessageDeserializerActor(client: InetSocketAddress, connec
       }
     }
     //    case (m: ConnectionClosed) => self ! PoisonPill
-    case r => log.error("xAxAx:" + r)
+//    case r => log.error("xAxAx:" + r)
   }
   //private def pwpHandler:Props =
   def debug(buffer: ByteBuffer) {
@@ -114,24 +140,16 @@ class PeerWireProtocolMessageDeserializerActor(client: InetSocketAddress, connec
     while (buffer.hasRemaining) {
       builder.append((buffer.get & 0x7F).asInstanceOf[Char])
     }
-    log.error(s"debug: ${builder}")
+    log.error(s"debug: ${buffer}|${builder}")
   }
 }
-case class Ack(sequence:Int) extends Event
-class PeerWireProtocolMessageActor(session: SessionManager, connection: ActorRef, peerId: PeerId) extends Actor {
+case class Ack(sequence: Int) extends Event
+class PeerWireProtocolMessageActor(session: Session, connection: ActorRef, peerId: PeerId) extends BufferingRetry(connection, new ClientSession(connection)) {//TODO central session
 
   private val log = new SimpleLog //Logging(context.system, this)
   private val fileManager = session.fileManager
 
-  def Ordering = new Ordering[Tuple2[ByteString,Int]] {
-    def compare(a : Tuple2[ByteString,Int], b : Tuple2[ByteString,Int]) = a._2.compare(b._2)
-  }
-  private lazy val buffer = scala.collection.mutable.PriorityQueue[Tuple2[ByteString,Int]]()(Ordering)
-  private var outstanding = 0
-  private var buffering = false
-  private var sequence = 0
-
-  override def receive: PartialFunction[Any, Unit] = {
+  override def data: PartialFunction[Any, Unit] = {
     case Handshake(infoHash, _) => {
       write(Handshake(infoHash, session.peerId))
       if (fileManager.haveAnyBlocks) {
@@ -151,61 +169,11 @@ class PeerWireProtocolMessageActor(session: SessionManager, connection: ActorRef
     case Have(index)      =>
     case Choke            =>
     case Unchoke          =>
-    case CommandFailed(w: Write) => {
-      val m = w.wantsAck
-      //      connection ! ResumeWriting
-      //      context become buffering(ack)
-      log.error("O/S buffer was full|" + m + "|" + outstanding+"|"+buffering+":"+w.ack)
-      outstanding = (outstanding - 1)
-      buffering = true
-      write(w.data)
-    }
-    case a:Ack => {
-//      log.error(a)
-      outstanding = (outstanding - 1)
-      checkBuffer
-    }
     case p: CommandFailed => log.error(p.cmd.failureMessage)
-    case Tcp.PeerClosed => {
-      println("outstanding:"+outstanding)
-      context stop self
-    }
     case NotIntrested => {
-      println("outstanding:"+outstanding)
+      //      println("outstanding:" + outstanding)
     }
     case a => log.error(s"unahandled message: ${a.getClass}")
-  }
-
-  //    private def buffering: PartialFunction[Any, Unit] = {
-  //      case _ =>
-  //    }
-
-  private def write(message: Showable): Unit = write(message.toByteString)
-  private def write(message: ByteString): Unit = buffering match {
-    case true => {
-      _buffer((message,getSequence))
-    }
-    case false => {
-      outstanding = (outstanding + 1)
-      log.debug(s"sent ${message}")
-      connection ! Write(message, Ack(getSequence))
-    }
-  }
-  private def _buffer(message:Tuple2[ByteString,Int]):Unit = {
-      buffer += message
-      checkBuffer
-  }
-  private def getSequence:Int ={
-    sequence = sequence+1
-    sequence
-  }
-  private def checkBuffer: Unit = {
-    if (outstanding == 0 || buffer.size >= 15) {
-      buffering = false
-      Range(0, buffer.length).foreach { _ =>
-        write(buffer.dequeue()._1)
-      }
-    }
   }
 }
 

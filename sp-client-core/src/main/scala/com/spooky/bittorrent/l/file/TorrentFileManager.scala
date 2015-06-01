@@ -1,6 +1,5 @@
 package com.spooky.bittorrent.l.file
 
-import com.spooky.bittorrent.metainfo.Checksum
 import com.spooky.bittorrent.metainfo.Torrent
 import java.nio.file.Path
 import java.util.BitSet
@@ -22,7 +21,7 @@ object TorrentFileManager {
   def apply(torrent: Torrent, root: Path, state: TorrentFileState): TorrentFileManager = new TorrentFileManager(torrent, root, new AtomicReference[BitSet](state.have))
 }
 
-class TorrentFileManager private (torrent: Torrent, root: Path, have: AtomicReference[BitSet]) {
+class TorrentFileManager private (val torrent: Torrent, root: Path, have: AtomicReference[BitSet]) {
   private lazy val channels = toChannels(torrent).toMap
 
   private def toChannels(torrent: Torrent): List[Tuple2[Path, FileChannel]] = {

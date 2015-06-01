@@ -12,10 +12,10 @@ object BittorrentClient {
     //http://192.168.0.110:2710/announce
     //    val provider = CompositePeerProvider(Torrent(new File("")), Nil)
     //    val peers = provider.get(5)
-    val file = new File(BittorrentClient.getClass.getResource("/local-debian.torrent").toURI)
-//    val file = new File(BittorrentClient.getClass.getResource("/debian.torrent").toURI)
+//    val file = new File(BittorrentClient.getClass.getResource("/local-debian.torrent").toURI)
+    val file = new File(BittorrentClient.getClass.getResource("/debian.torrent").toURI)
     val torrent = Torrent(file)
-    println("infoHash:"+torrent.infoHash.toHex)
+    println("infoHash:"+torrent.infoHash)
     val setup = TorrentSetup(torrent, Paths.get("P:\\tmp\\t"))
     val ref = BittorrentAPI.start(setup)
 

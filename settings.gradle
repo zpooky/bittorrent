@@ -1,0 +1,4 @@
+include 'bittorent-shared', 'message-stream-encryption', 'sp-client-core', 'bencode', 'dht'
+
+
+//rootProject.name = 'sp-client-core'

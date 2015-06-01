@@ -1,25 +1,25 @@
 package com.spooky.bittorrent.protocol.server.tracker
 
-import com.spooky.bittorrent.metainfo.Checksum
-import com.spooky.bittorrent.bencode.BValue
+import com.spooky.bencode.BValue
 import com.spooky.bittorrent.model.PeerId
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.time.LocalDateTime
 import com.spooky.bittorrent.metainfo.Tracker
 import scala.concurrent.duration.FiniteDuration
-import com.spooky.bittorrent.bencode.BValue
-import com.spooky.bittorrent.bencode.BList
-import com.spooky.bittorrent.bencode.BDictionary
+import com.spooky.bencode.BValue
+import com.spooky.bencode.BList
+import com.spooky.bencode.BDictionary
 import java.math.BigInteger
-import com.spooky.bittorrent.bencode.BInteger
-import com.spooky.bittorrent.bencode.BString
+import com.spooky.bencode.BInteger
+import com.spooky.bencode.BString
 import com.spooky.bittorrent.model.AbstractPeer
-import com.spooky.bittorrent.bencode.BValue
-import com.spooky.bittorrent.bencode.BDictionary
+import com.spooky.bencode.BValue
+import com.spooky.bencode.BDictionary
 import scala.annotation.tailrec
-import com.spooky.bittorrent.bencode.BString
+import com.spooky.bencode.BString
 import java.nio.charset.Charset
+import com.spooky.bittorrent.Checksum
 
 case class Announcing(tracker: Tracker)
 case class AnnounceRequest(checkSum: Checksum,

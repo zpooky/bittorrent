@@ -4,9 +4,10 @@ import org.scalatest.FunSuite
 import java.util.BitSet
 import java.nio.ByteBuffer
 import com.spooky.bittorrent.model.PeerId
-import com.spooky.bittorrent.metainfo.Checksum
-import com.spooky.bittorrent.metainfo.Sha1
 import com.spooky.bittorrent.ImmutableByteBuffer
+import com.spooky.bittorrent.Checksum
+import com.spooky.bittorrent.Sha1
+import com.spooky.bittorrent.InfoHash
 
 class RequestTest extends FunSuite {
   def getBitSet = BitSet.valueOf(Array(Integer.MAX_VALUE.asInstanceOf[Byte], 0.asInstanceOf[Byte], Integer.MIN_VALUE.asInstanceOf[Byte], 1.asInstanceOf[Byte], 33.asInstanceOf[Byte], 44.asInstanceOf[Byte]))
@@ -17,13 +18,13 @@ class RequestTest extends FunSuite {
     buffer.flip().asInstanceOf[ByteBuffer]
   }
 
-  def getChecksum: Checksum = {
+  def getChecksum: InfoHash = {
     val raw = ByteBuffer.allocate(20)
     val l: Long = -6148914691236517206L
     raw.putLong(l)
     raw.putLong(l)
     raw.putInt(-1431655766)
-    Checksum.parse(raw.flip().asInstanceOf[ByteBuffer], Sha1)
+    InfoHash.parse(raw.flip().asInstanceOf[ByteBuffer])
   }
   def getByteId: PeerId = {
     PeerId("09876543211234567890")

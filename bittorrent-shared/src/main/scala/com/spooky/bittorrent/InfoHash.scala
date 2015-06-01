@@ -1,0 +1,25 @@
+package com.spooky.bittorrent
+
+import org.apache.commons.codec.binary.Hex
+import java.util.Arrays
+import java.security.MessageDigest
+import java.nio.ByteBuffer
+
+sealed case class InfoHash(sum: Array[Byte]) {
+  override def toString: String = Hex.encodeHexString(sum)
+  override def hashCode: Int = Arrays.hashCode(sum)
+  override def equals(o: Any): Boolean = o match {
+    case InfoHash(otherHash) => MessageDigest.isEqual(otherHash, sum)
+    case _                   => false
+  }
+}
+object InfoHash {
+  def apply(sha1: Sha1): InfoHash = InfoHash(sha1.raw)
+  def hex(hex: String): InfoHash = InfoHash(Hex.decodeHex(hex.toCharArray()))
+  def parse(buffer: ByteBuffer): InfoHash = {
+    assert(buffer.remaining >= 20)
+    val result = new Array[Byte](20)
+    buffer.get(result)
+    InfoHash(result)
+  }
+}

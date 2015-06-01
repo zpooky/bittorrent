@@ -1,23 +1,25 @@
 package com.spooky.bittorrent.protocol.client.pwp.api
 
-import com.spooky.bittorrent.metainfo.Checksum
 import com.spooky.bittorrent.model.PeerId
 import akka.util.ByteString
 import java.nio.ByteOrder
 import java.nio.ByteBuffer
-import com.spooky.bittorrent.metainfo.Sha1
 import com.spooky.bittorrent.Binary
 import java.util.BitSet
 import java.nio.charset.Charset
 import java.security.MessageDigest
 import com.spooky.bittorrent.ImmutableByteBuffer
+import com.spooky.bittorrent.Checksum
+import com.spooky.bittorrent.Sha1
+import scala.annotation.tailrec
+import com.spooky.bittorrent.InfoHash
 
 trait Showable {
   def toByteBuffer: ByteBuffer
   def toByteString: ByteString = ByteString(toByteBuffer)
 }
 abstract class PeerWireMessage
-case class Handshake(infoHash: Checksum, peerId: PeerId) extends PeerWireMessage with Showable {
+case class Handshake(infoHash: InfoHash, peerId: PeerId) extends PeerWireMessage with Showable {
   def toByteBuffer: ByteBuffer = {
     val buffer = ByteBuffer.allocate(1 + 19 + 8 + 20 + 20).order(ByteOrder.BIG_ENDIAN)
     buffer.put(19.asInstanceOf[Byte])
@@ -29,7 +31,8 @@ case class Handshake(infoHash: Checksum, peerId: PeerId) extends PeerWireMessage
     buffer.flip().asInstanceOf[ByteBuffer]
   }
   override def equals(other: Any): Boolean = other match {
-    case Handshake(Checksum(otherHash, otherAlgorithm), PeerId(otherId)) => MessageDigest.isEqual(infoHash.sum, otherHash) && infoHash.algorithm == otherAlgorithm && otherId.equals(peerId.id)
+    case Handshake(otherHash: InfoHash, PeerId(otherId)) => otherHash == infoHash && otherId == peerId
+
     case _ => false
   }
 }
@@ -39,7 +42,7 @@ object Handshake {
     val length = buffer.get.asInstanceOf[Int] & 0xFF
     val p = read(buffer, length)
     val reserved = buffer.getLong
-    val infoHash = Checksum.parse(buffer, Sha1)
+    val infoHash = InfoHash.parse(buffer)
     val peerId = PeerId.parse(buffer)
     //    println(length + "|" + p + "|" + peerId)
     Handshake(infoHash, peerId)
@@ -59,6 +62,15 @@ object Handshake {
   }
 }
 object PeerWireMessage {
+  def parse(buffer: ByteBuffer): List[PeerWireMessage] = {
+    if (buffer.hasRemaining()) {
+      apply(buffer) match {
+        case Some(e) => e :: parse(buffer)
+        case None    => Nil
+      }
+    } else Nil
+  }
+
   def apply(buffer: ByteBuffer): Option[PeerWireMessage] = {
     if (!buffer.hasRemaining()) {
       None
@@ -219,7 +231,7 @@ object Bitfield {
       Bitfield(BitSet.valueOf(buffer.duplicate().limit(buffer.position + length).asInstanceOf[ByteBuffer]))
     } catch {
       case e: IllegalArgumentException => {
-        println(buffer.position()+"|"+length+"|"+(buffer.position + length)+"|"+buffer)
+        println(buffer.position() + "|" + length + "|" + (buffer.position + length) + "|" + buffer)
         throw e
       }
     }

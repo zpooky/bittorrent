@@ -1,0 +1,22 @@
+apply plugin: 'scala'
+apply plugin: 'eclipse'
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+	compile 'commons-codec:commons-codec:1.10'
+}
+eclipse {
+	project {
+		}
+	classpath {
+		  file {
+			withXml {
+				  def node = it.asNode()
+				  node.appendNode('classpathentry', [combineaccessrules: 'false',kind:'src', path:'/bittorrent-shared'])
+			  }
+		  }
+	  }
+  }

@@ -9,7 +9,7 @@ import com.spooky.bittorrent.protocol.server.tracker.TrackerProvider
 import com.spooky.bittorrent.protocol.server.tracker.TrackerManager
 import com.spooky.bittorrent.SpookyBittorrent._
 import com.spooky.bittorrent.model.TorrentStatistics
-import com.spooky.bittorrent.l.SessionManager
+import com.spooky.bittorrent.l.session.SessionManager
 import java.nio.file.Path
 import com.spooky.bittorrent.l.file.FileInitiator
 import com.spooky.bittorrent.model.TorrentSetup

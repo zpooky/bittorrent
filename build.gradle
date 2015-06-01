@@ -1,0 +1,31 @@
+allprojects {
+	//Put instructions for all projects
+}
+
+subprojects {
+	//Put instructions for each sub project
+configurations {
+    //scalaCompiler
+		}
+		dependencies {
+		   //compile "org.scala-lang:scala-compiler:2.11.2"
+		  // if you don't have a correct ivy.xml for scala-compiler,
+		  // you'll also have to declare the two other deps
+		}
+		//tasks.withType(ScalaCompile) {
+		//  scalaClasspath = configurations.scalaCompiler
+		//}
+}
+
+//API Project specific stuff
+project(':message-stream-encryption') {
+//	dependencies.compile project(':bittorrent-shared')
+}
+
+//Common Project specific stuff
+//project(':bittorrent-shared') {
+//}
+
+//App Project specific stuff
+//project(':sp-client-core') {
+//}

@@ -5,13 +5,13 @@ import com.spooky.bittorrent.l.Utils._
 import com.spooky.bittorrent.metainfo.Torrent
 import com.spooky.bittorrent.metainfo.TorrentFile
 import com.spooky.bittorrent.model.TorrentFileState
-import com.spooky.bittorrent.metainfo.Checksum
 import java.nio.file.Path
 import java.nio.channels.FileChannel
 import scala.reflect.io.File
 import java.io.BufferedInputStream
 import scala.annotation.tailrec
 import java.io.BufferedWriter
+import com.spooky.bittorrent.Checksum
 
 class FileInitiator(torrent: Torrent, root: Path) {
   private def rawFiles = torrent.info.files

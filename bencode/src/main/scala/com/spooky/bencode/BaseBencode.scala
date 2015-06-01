@@ -1,49 +1,11 @@
-package com.spooky.bittorrent.bencode
+package com.spooky.bencode
 
 import scala.annotation.tailrec
-import com.spooky.bittorrent.bencode.wtf._
-import scala.reflect.io.Streamable.Bytes
-import spray.http.HttpData
+import com.spooky.bencode.wtf._
 
-abstract class BOption {
 
-}
-sealed case class BSome[T](value: T) extends BOption
-sealed case class BNone[T]() extends BOption
-
-abstract class BValue {
-  def toBencode: String
-  def toBDictionary: Option[BDictionary] = this match {
-    case (d: BDictionary) => Some(d)
-    case _                => None
-  }
-  def toBString: Option[BString] = this match {
-    case (s: BString) => Some(s)
-    case _            => None
-  }
-}
-case class BString(value: String) extends BValue {
-  override def toBencode = value.length + ":" + value
-}
-case class BInteger(value: Long) extends BValue {
-  override def toBencode = "i" + value + "e"
-}
-case class BList(value: List[BValue]) extends BValue {
-  override def toBencode = value.foldLeft(StringBuilder.newBuilder.append("l"))((first, current) => first.append(current.toBencode)).toString + "e"
-}
-case class BDictionary(value: List[Tuple2[BString, BValue]]) extends BValue {
-  def get(search: String): Option[BValue] = {
-    value.find { case (key, _) => key.value.equals(search) }.map(_._2)
-  }
-  //TODO need to sort list according to spec
-  override def toBencode = value.foldLeft(StringBuilder.newBuilder.append("d"))((previous, current) => previous.append(current._1.toBencode).append(current._2.toBencode)).toString + "e"
-}
-case class BChecksum(value: Array[Byte]) extends BValue {
-  //TODO
-  override def toBencode = "???"
-}
-
-object Bencode {
+object Bencode extends BaseBencode
+abstract class BaseBencode {
 
   def decode(stream: String): BValue = {
     decode(new StringBStream(stream))
@@ -51,10 +13,6 @@ object Bencode {
 
   def decode(stream: Array[Byte]): BValue = {
     decode(new ByteBStream(stream, 0))
-  }
-
-  def decode(stream: HttpData.NonEmpty): BValue = {
-    decode(HttpDataBStream(stream))
   }
 
   def decode(stream: BStream): BValue = {

@@ -4,9 +4,9 @@ import java.util.BitSet
 import com.spooky.bittorrent.metainfo.Torrent
 import java.security.MessageDigest
 import scala.annotation.tailrec
-import com.spooky.bittorrent.metainfo.Checksum
-import com.spooky.bittorrent.metainfo.Sha1
 import java.nio.ByteBuffer
+import com.spooky.bittorrent.Checksum
+import com.spooky.bittorrent.Sha1
 object Utils {
 
   class /*Not immutable*/ BitSetBuilder(bitSet: BitSet, index: Int) {

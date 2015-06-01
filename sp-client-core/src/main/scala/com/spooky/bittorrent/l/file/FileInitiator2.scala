@@ -7,7 +7,6 @@ import java.nio.file.Path
 import com.spooky.bittorrent.metainfo.TorrentFile
 import com.spooky.bittorrent.model.TorrentFileState
 import scala.annotation.tailrec
-import com.spooky.bittorrent.metainfo.Checksum
 import scala.reflect.io.File
 import scala.io.Source
 import java.nio.channels.FileChannel

@@ -1,4 +1,4 @@
-package com.spooky.bittorrent.bencode
+package com.spooky.bencode
 
 import java.nio.ByteBuffer
 

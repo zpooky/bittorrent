@@ -1,21 +1,8 @@
 package com.spooky.bittorrent.metainfo
 
 import java.io.File
-import com.spooky.bittorrent.bencode.TorrentFileStream
-import com.spooky.bittorrent.bencode.Bencode
-import com.spooky.bittorrent.bencode.BValue
-import com.spooky.bittorrent.bencode.BDictionary
-import com.spooky.bittorrent.bencode.BList
-import com.spooky.bittorrent.bencode.BString
-import com.spooky.bittorrent.bencode.BInteger
-import com.spooky.bittorrent.bencode.BChecksum
-import com.spooky.bittorrent.bencode.BInteger
 import java.net.URL
-import com.spooky.bittorrent.bencode.BDictionary
-import com.spooky.bittorrent.bencode.BDictionary
-import com.spooky.bittorrent.bencode.BList
 import scala.annotation.tailrec
-import com.spooky.bittorrent.bencode.InfoHash
 import java.util.Base64
 import java.net.URLEncoder
 import org.apache.commons.codec.net.URLCodec
@@ -26,66 +13,31 @@ import com.google.gson.GsonBuilder
 import com.google.gson.Gson
 import org.apache.commons.codec.binary.Hex
 import java.util.Arrays
+import com.spooky.bittorrent.Checksum
+import com.spooky.bencode.TorrentFileStream
+import com.spooky.bencode._
+import com.spooky.bittorrent.Sha1
+import com.spooky.bittorrent.InfoHash
+import com.spooky.bittorrent.InfoHashs
 
-object Torrents {
-  type InfoHash = Checksum
-}
+//object Torrents {
+//  type InfoHash = Checksum
+//}
 
-abstract class Algorithm(val bytes: Int) {
-  override def toString = this.getClass.getSimpleName.replace("$", "")
-  def newMessageDigest = MessageDigest.getInstance(toString)
-}
-object Sha1 extends Algorithm(20)
-object Md5 extends Algorithm(16)
-sealed case class Checksum(sum: Array[Byte], algorithm: Algorithm) {
-  def check(other: Array[Byte]): Boolean = {
-    check(other.length, other)
-  }
-  def check(length: Int, other: Array[Byte]*): Boolean = {
-      @tailrec
-      def rec(length: Int, other: Seq[Array[Byte]], index: Int, digest: MessageDigest): Array[Byte] = {
-        if (other.length - 1 == index) {
-          digest.update(other(index), 0, length)
-          digest.digest
-        } else {
-          digest.update(other(index))
-          rec(length, other, index + 1, digest)
-        }
-      }
-    val digester = MessageDigest.getInstance(algorithm.toString)
-    MessageDigest.isEqual(sum, rec(length, other, 0, digester))
-  }
-  def compare(other: Array[Byte]): Boolean = MessageDigest.isEqual(sum, other)
-  def toHex:String = Hex.encodeHexString(sum)
-  override def hashCode:Int = Arrays.hashCode(sum)
-  override def equals(o: Any): Boolean = o match {
-    case Checksum(otherHash, Sha1) => MessageDigest.isEqual(otherHash, sum)
-    case _                         => false
-  }
-}
-object Checksum {
-  def parse(raw: ByteBuffer, algorithm: Algorithm): Checksum = {
-    val checksum = Array.ofDim[Byte](algorithm.bytes)
-    for (n <- 0 until algorithm.bytes) {
-      checksum(n) = raw.get
-    }
-    Checksum(checksum, algorithm)
-  }
-}
 case class Info(pieceLength: Int, length: Long, files: List[TorrentFile], pieces: List[Checksum], priv: Boolean, rootHash: Option[Checksum])
 case class Node(host: String, port: Int)
 case class Tracker(announce: String)
 case class TorrentFile(name: String, bytes: Long)
-case class Torrent(infoHash: Checksum, info: Info, nodes: List[Node], trackers: Set[Tracker], creationDate: Option[String], comment: Option[String], createdBy: Option[String], encoding: Option[String], httpSeeds: List[URL]) extends Metainfo {
+case class Torrent(infoHash: InfoHash, info: Info, nodes: List[Node], trackers: Set[Tracker], creationDate: Option[String], comment: Option[String], createdBy: Option[String], encoding: Option[String], httpSeeds: List[URL]) extends Metainfo {
   //  override def toString: String = new GsonBuilder().setPrettyPrinting().create().toJson(this)
 }
 object Torrent {
   def apply(torrent: File): Torrent = {
     val stream = TorrentFileStream(torrent)
-    //		println(torrent)
+    //		println(torrent)1
     //    println(stream.toString)
     val dictionary = Bencode.decode(stream)
-    val infoHash = InfoHash.hash(stream)
+    val infoHash = InfoHashs.hash(stream)
     //    println(dictionary)
     stream.close
     val torrentData = dictionary match {

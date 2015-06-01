@@ -1,0 +1,15 @@
+Sequential order queue
+
+-Order by sequence id(lowest first)
+-Unchoke and choke in same queue = removes both
+-Choke has highest priority
+-
+-multiple choke/unchoke = behave as set
+-Keep track of last sent id
+	-if [in buffered send mode]
+		-if not succeeding sequence is available
+			-post a job(another thread) which waits unitil next in sequence is available or until timeout
+		-else write from queue until a gap			^
+			-if gap post job -----------------------|
+			
+			

@@ -2,7 +2,6 @@ package com.spooky.bittorrent.protocol.server.tracker
 
 import com.spooky.bittorrent.metainfo.Tracker
 import com.spooky.bittorrent.model.PeerId
-import com.spooky.bittorrent.metainfo.Checksum
 import spray.client.pipelining._
 import spray.http.HttpRequest
 import com.spooky.bittorrent.SpookyBittorrent
@@ -10,7 +9,6 @@ import scala.concurrent.Future
 import spray.httpx.unmarshalling.Unmarshaller
 import spray.http.HttpEntity
 import spray.httpx.unmarshalling._
-import com.spooky.bittorrent.bencode.Bencode
 import akka.actor.ActorSystem
 import scala.concurrent.ExecutionContext
 import com.spooky.bittorrent.actors.BittorrentActors
@@ -28,9 +26,11 @@ import spray.http.MediaTypes
 import spray.http.MediaRanges
 import com.spooky.bittorrent.model.TorrentConfiguration
 import com.spooky.bittorrent.Config
-import com.spooky.bittorrent.bencode.BDictionary
+import com.spooky.bittorrent.protocol.server.tracker._
+import com.spooky.bittorrent.bencode.Bencodes
 
 class TrackerManager(tracker: Tracker)(implicit context: ExecutionContext, actorSystem: ActorSystem, actors: BittorrentActors) {
+  protected val UTF8 = Charset.forName("UTF8")
   def announce(statistics: TorrentStatistics)(implicit id: PeerId) {
     val requestTimeout = Timeout(1 millisecond)
     val pipeline = announcePipeline
@@ -52,7 +52,7 @@ class TrackerManager(tracker: Tracker)(implicit context: ExecutionContext, actor
   private def url(url: String, configuration: TorrentConfiguration, statistics: TorrentStatistics, id: PeerId) = {
     val codec = new URLCodec
     val ascii = Charset.forName("ASCII")
-    val encoder = Base64.getEncoder()
+//    val encoder = Base64.getEncoder()
     val infoHash = new String(codec.encode(statistics.infoHash.sum), ascii)
     val peerId = id.id
     val key = "ss"
@@ -68,8 +68,9 @@ class TrackerManager(tracker: Tracker)(implicit context: ExecutionContext, actor
   private implicit def AnnounceResponseUnmarshaller =
     Unmarshaller[Announced](MediaRanges.`*/*`) {
       case HttpEntity.NonEmpty(_, data) => {
-        val b = Bencode.decode(data.toByteArray)
+        val b = Bencodes.decode(data.toByteArray)
         Announced(b)
+//        Announced(null)
       }
       case e => println(e); null
     }
