@@ -74,6 +74,11 @@ test("offbeat"){
     assert(bf.limit() == 16384)
     assert(bf.position == 0)
   }
+  test("complete"){
+	  val fm = TorrentFileManager(torrent, root, stat)
+    assert(fm.complete)
+
+  }
 }
 
 class TorrentFileManager_MultipleFileTest extends FunSuite {

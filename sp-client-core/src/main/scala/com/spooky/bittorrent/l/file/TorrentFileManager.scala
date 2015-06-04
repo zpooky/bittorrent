@@ -42,29 +42,29 @@ class TorrentFileManager private (val torrent: Torrent, root: Path, have: Atomic
   }
   def complete: Boolean = {
       @tailrec
-      def rec(set: BitSet, index: Int): Boolean = {
-        if (set.size == index) {
+      def rec(set: BitSet, index: Int, size: Int): Boolean = {
+        if (size == index) {
           true
         } else if (!set.get(index)) {
           false
         } else {
-          rec(set, index + 1)
+          rec(set, index + 1, size)
         }
       }
-    rec(have.get, 0)
+    rec(have.get, 0, noPieces)
   }
   def haveAnyBlocks: Boolean = {
       @tailrec
-      def rec(set: BitSet, index: Int): Boolean = {
-        if (set.size == index) {
+      def rec(set: BitSet, index: Int, size: Int): Boolean = {
+        if (size == index) {
           false
         } else if (set.get(index)) {
           true
         } else {
-          rec(set, index + 1)
+          rec(set, index + 1, size)
         }
       }
-    rec(have.get, 0)
+    rec(have.get, 0, noPieces)
   }
   def blocks: BitSet = have.get
 
@@ -109,6 +109,7 @@ class TorrentFileManager private (val torrent: Torrent, root: Path, have: Atomic
   }
   private def startOf(index: Long, begin: Long): Long = (index * blockSize) + begin
   private[file] def toAbsolute(file: String): Path = root.resolve(file)
+  private lazy val noPieces = torrent.info.pieces.length
   private def blockSize: Int = torrent.info.pieceLength
   private def get(): RandomAccessFile = {
     null
@@ -124,7 +125,7 @@ class TorrentFileManager private (val torrent: Torrent, root: Path, have: Atomic
         case _ if toRead <= 0  => Nil
         case file :: xs if start < file.bytes => {
           val head = (toAbsolute(file.name), start, Math.min(file.bytes, toRead))
-          if(toRead < 0 || head._2 < 0 || head._3 < 0){
+          if (toRead < 0 || head._2 < 0 || head._3 < 0) {
             println()
           }
           head :: rec(0, (start + toRead) - file.bytes, xs)

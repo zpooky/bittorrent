@@ -19,6 +19,11 @@ class TorrentStartActor extends Actor {
       val b = new BitSet(size)
       for (i <- 0 until (size)) {
         b.set(i, true)
+        b.set(i+1, true)
+        b.set(i+2, true)
+//        b.set(i+3, true)
+//        b.set(i+4, true)
+
       }
       SessionManager.register(EnrichedTorrentSetup(torrent, root, TorrentFileState(b)))
       //        SessionManager.register(EnrichedTorrentSetup(torrent, root, state))
