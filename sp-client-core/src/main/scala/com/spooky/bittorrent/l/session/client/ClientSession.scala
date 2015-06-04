@@ -11,7 +11,7 @@ class ClientSession(connection: ActorRef) extends ClientViewableSession {
 
   def choke(): Unit = {
     if (!choking) {
-      println(i+".choke")
+//      println(i+".choke")
       i = i+1
       connection ! Choke
       choking = true
@@ -20,7 +20,7 @@ class ClientSession(connection: ActorRef) extends ClientViewableSession {
 
   def unchoke(): Unit = {
     if (choking) {
-    	println(i+".unchoke")
+//    	println(i+".unchoke")
       i = i+1
       connection ! Unchoke
       choking = false

@@ -15,6 +15,12 @@ object Utils {
       bitSet.set(index, b)
       new BitSetBuilder(bitSet, index + 1)
     }
+    def setRemaining(b: Boolean): BitSetBuilder = {
+      for (i <- index.until(bitSet.size)) {
+        bitSet.set(i, b)
+      }
+      new BitSetBuilder(bitSet, bitSet.size)
+    }
     def toBitSet: BitSet = {
       bitSet
     }
@@ -62,7 +68,7 @@ object Utils {
       val builder = if (current != 0) {
         bitSet.append(checksums.head.compare(digest.digest()))
       } else bitSet
-      builder.toBitSet
+      builder./*setRemaining(true).*/toBitSet
     }
   }
   object BitSetConsumer {

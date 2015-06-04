@@ -42,10 +42,11 @@ class ChokePredictor(window: Size, session: ClientSession) {
   private def tick: Unit = {
     if (shouldChoke) {
       session.choke()
-    } else {
+    } else if (shouldUnchoke) {
       session.unchoke()
     }
   }
   private def shouldChoke: Boolean = window.percentageFor(Size(outstanding, Byte)) > 90
+  private def shouldUnchoke: Boolean = window.percentageFor(Size(outstanding, Byte)) > 80
 
 }

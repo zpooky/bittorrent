@@ -12,6 +12,9 @@ class BittorrentActors(val actorSystem: ActorSystem) extends PeerWireProtocolsAc
   def announce: ActorRef = actorSystem.actorOf(Props[AnnounceActor]())
 
   val dhtAPI: ActorRef = actorSystem.actorOf(Props(classOf[DHTServer], TestDHT))
+
+  def start: ActorRef = actorSystem.actorOf(Props(classOf[TorrentStartActor]))
+
 }
 
 object TestDHT extends DHTHandlerProps {

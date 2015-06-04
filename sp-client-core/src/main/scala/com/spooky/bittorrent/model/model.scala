@@ -36,11 +36,12 @@ case class TorrentFileState(have: BitSet) {
   }
 }
 case class TorrentSetup(torrent: Torrent, root: Path)
+case class EnrichedTorrentSetup(torrent: Torrent, root: Path, state: TorrentFileState)
 case class TorrentStatistics(infoHash: InfoHash, uploaded: Long, downloaded: Long, left: Long, corrupt: Long)
 case class TorrentConfiguration(port: Short, numwant: Int)
 abstract class AbstractPeer(ip: String, port: Short)
 case class Peer(ip: String, port: Short) extends AbstractPeer(ip, port)
-case class TorrentRef(info: Checksum, peerId: PeerId)
+case class TorrentRef(info: InfoHash, peerId: PeerId)
 object TorrentRef {
-  def apply(torrent: Torrent, peerId: PeerId): TorrentRef = TorrentRef(torrent, peerId)
+  def apply(torrent: Torrent, peerId: PeerId): TorrentRef = TorrentRef(torrent.infoHash, peerId)
 }

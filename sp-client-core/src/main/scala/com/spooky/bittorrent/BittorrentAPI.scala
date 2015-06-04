@@ -21,16 +21,17 @@ object BittorrentAPI {
 //  private val config = ConfigFactory.parseFile(new File(BittorrentAPI.getClass.getResource("/application.conf").toURI))
   private implicit lazy val system = ActorSystem("spooky-bittorrent"/*, config*/)
   private implicit val id = PeerId.create
-  private implicit val actors = new BittorrentActors(system)
+  private implicit lazy val actors = new BittorrentActors(system)
   //TODO make it better(message passing to actors and the like)
   def start(setup: TorrentSetup): TorrentRef = {
     val torrent = setup.torrent
     //    val tracker = new TrackerProvider(torrent)
-    val manager = new TrackerManager(torrent.trackers.find(_ => true).get)
+//    val manager = new TrackerManager(torrent.trackers.find(_ => true).get)
     val statistics = TorrentStatistics(torrent.infoHash, torrent.info.length, torrent.info.length, 0, 0)
-    val ref = SessionManager.register(setup)
-    manager.announce(statistics)(id)
-    ref
+//    val ref = SessionManager.register(setup)
+//    manager.announce(statistics)(id)
+    actors.start ! setup
+    TorrentRef(torrent, id)
   }
 
   def stop(torrentRef: TorrentRef) {

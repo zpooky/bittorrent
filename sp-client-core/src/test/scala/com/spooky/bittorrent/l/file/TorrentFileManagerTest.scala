@@ -9,6 +9,7 @@ import java.nio.file.StandardOpenOption
 import java.nio.ByteBuffer
 import java.security.MessageDigest
 import com.spooky.bittorrent.metainfo.Torrents
+import com.spooky.bittorrent.Sha1
 
 class TorrentFileManager_SingleFileTest extends FunSuite {
   val file = new File(TorrentFileManager.getClass.getResource("/debian.torrent").toURI)
@@ -51,19 +52,30 @@ class TorrentFileManager_SingleFileTest extends FunSuite {
     val fm = TorrentFileManager(torrent, root, stat)
     var checksum = torrent.info.pieces
     for (index <- 0 until torrent.info.pieces.length) {
-      val digest = MessageDigest.getInstance("sha1")
+      val digest = Sha1.newMessageDigest
       for (offset <- 0 until (pieceLength, chunkSize)) {
         val buffer = fm.read(index, offset, chunkSize)
         digest.update(buffer)
       }
-      assert(checksum.head.compare(digest.digest()))
+      assert(checksum.head.compare(digest.digest()), s"index:$index")
       checksum = checksum.tail
     }
     assert(checksum == Nil)
     fm.close()
   }
+test("offbeat"){
+    val fm = TorrentFileManager(torrent, root, stat)
+
+}
+  test("read") {
+    val fm = TorrentFileManager(torrent, root, stat)
+    val bf = fm.read(980, 0, 16384)
+    assert(bf.capacity() == 16384)
+    assert(bf.limit() == 16384)
+    assert(bf.position == 0)
+  }
 }
 
-class TorrentFileManager_MultipleFileTest extends FunSuite{
+class TorrentFileManager_MultipleFileTest extends FunSuite {
 
 }

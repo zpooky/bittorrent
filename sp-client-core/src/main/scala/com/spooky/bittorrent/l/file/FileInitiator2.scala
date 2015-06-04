@@ -17,45 +17,49 @@ class FileInitiator2(torrent: Torrent, root: Path) {
   private def rawFiles = torrent.info.files
 
   private def files: List[Tuple2[Path, Long]] = rawFiles.map({ case TorrentFile(file, bytes) => (root.resolve(file), bytes) }).toList
-
+  //[23:47:11]  received bitfield, 6272 of 6274 pieces complete (99%)
   def state(): TorrentFileState = {
       @tailrec
       def rec(files: List[Tuple2[Path, Long]], consumer: BitSetConsumer): BitSetConsumer = files match {
         case Nil => consumer
-        case s :: xs => {
-          val (file, bytes) = s
+        case (file, bytes) :: xs => {
           if (file.toFile.exists) {
             if (file.toFile.length == bytes) {
-              val consumerAfter = verify(file, consumer)
-              rec(xs, consumerAfter)
+              rec(xs, verify(file, consumer))
             } else {
               throw new RuntimeException("Not implemented... sorry")
             }
           } else {
-            throw new RuntimeException("stfu")
+            throw new RuntimeException(s"stfu: file ${file} not found")
             //            val (bufferRest, lengthRest, checksumsRest, builderRest) = fill(File(file), bytes, checksums, builder, buffer, length)
             //            rec(xs, checksumsRest, builderRest, bufferRest, lengthRest)
           }
         }
       }
+
     val consumer = BitSetConsumer(torrent)
-    TorrentFileState(rec(files, consumer).toBitSet)
+    val start = System.currentTimeMillis()
+    val s = TorrentFileState(rec(files, consumer).toBitSet)
+    println((((System.currentTimeMillis() - start)/1000d)/60d) + "min")
+    s
   }
   //  implicit def convert(in: java.nio.file.Path): scala.reflect.io.Path = {
   //    scala.reflect.io.Path(in.toFile)
   //  }
   private def verify(file: Path, xx: BitSetConsumer): BitSetConsumer = {
-      def rec(channel: FileChannel, consumer: BitSetConsumer, buffer: ByteBuffer): BitSetConsumer = {
-        if (channel.position == channel.size) {
+      def rec(channel: FileChannel, consumer: BitSetConsumer, buffer: ByteBuffer, fileSize: Long, position: Long): BitSetConsumer = {
+//        assert(position == channel.position)
+        if (position == fileSize) {
           channel.close()
           consumer
         } else {
           channel.read(buffer)
-          rec(channel, consumer.consume(buffer.flip().asInstanceOf[ByteBuffer]), buffer.clear.asInstanceOf[ByteBuffer])
+          val newPositon = position + buffer.position
+          rec(channel, consumer.consume(buffer.flip().asInstanceOf[ByteBuffer]), buffer.clear.asInstanceOf[ByteBuffer], fileSize, newPositon)
         }
       }
-    val buffer = ByteBuffer.allocate(1024)
+    val buffer = ByteBuffer.allocate(1024 * 4)
     val channel = FileChannel.open(file, StandardOpenOption.READ)
-    rec(channel, xx, buffer)
+    rec(channel, xx, buffer, channel.size, 0)
   }
 }
