@@ -17,7 +17,6 @@ import java.nio.ByteOrder
 import java.nio.ByteBuffer
 import akka.io.Tcp.Write
 import com.spooky.bittorrent.protocol.client.pwp.api.Bitfield
-import com.spooky.bittorrent.protocol.client.pwp.api.Showable
 import com.spooky.bittorrent.protocol.client.pwp.api.Request
 import com.spooky.bittorrent.protocol.client.pwp.api.Piece
 import com.spooky.bittorrent.ImmutableByteBuffer

@@ -3,13 +3,13 @@ package com.spooky.bittorrent.u
 import akka.util.ByteString
 import akka.actor.Actor
 import akka.io.Tcp.Event
-import com.spooky.bittorrent.protocol.client.pwp.api.Showable
 import akka.actor.ActorRef
 import akka.io.Tcp.Write
 import akka.io.Tcp.CommandFailed
 import akka.io.Tcp
 import com.spooky.bittorrent.protocol.client.pwp.actor.SimpleLog
 import com.spooky.bittorrent.l.session.client.ClientSession
+import com.spooky.bittorrent.Showable
 
 case class Ack(sequence: Int, t: Thing) extends Event
 abstract class BufferingRetry(connection: ActorRef, session: ClientSession) extends Actor {

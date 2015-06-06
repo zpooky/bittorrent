@@ -7,8 +7,10 @@ import akka.actor.Props
 import akka.io.IO
 import akka.io.Udp
 import com.spooky.bittorrent.Config
+import akka.actor.actorRef2Scala
+import com.spooky.Message
 
-class DHTServer(handlerProps: DHTHandlerProps) extends Actor {
+class DHTServer(handler: ActorRef) extends Actor {
   import context.system
   IO(Udp) ! Udp.Bind(self, new InetSocketAddress(Config.hostname, Config.dhtPort))
 
@@ -17,14 +19,18 @@ class DHTServer(handlerProps: DHTHandlerProps) extends Actor {
       context stop self
     }
     case Udp.SimpleSenderReady =>
-      val handler = context.actorOf(handlerProps.props(sender))
-      context.become(ready(handler))
+    case Udp.Received(data, remote) => {
+      handler ! Message(data, remote)
+    }
+    case l @ Udp.Bound =>
+    case Udp.Unbind    => sender ! Udp.Unbind
+    case Udp.Unbound   => context.stop(self)
   }
 
-  def ready(send: ActorRef): Receive = {
-    case r =>
-      send ! r
-  }
+//  def ready(send: ActorRef): Receive = {
+//    case r =>
+//      send ! r
+//  }
 }
 trait DHTHandlerProps {
   def props(connection: ActorRef): Props

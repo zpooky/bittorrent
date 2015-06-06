@@ -7,4 +7,5 @@ repositories {
 
 dependencies {
 	compile 'commons-codec:commons-codec:1.10'
+    compile 'com.typesafe.akka:akka-actor_2.11:2.3.6'
 }

@@ -3,7 +3,7 @@ package com.spooky.bittorrent.u
 import com.spooky.bittorrent.protocol.client.pwp.api.Request
 import com.spooky.bittorrent.protocol.client.pwp.api.Piece
 import com.spooky.bittorrent.l.session.client.ClientSession
-import com.spooky.bittorrent.protocol.client.pwp.api.Showable
+import com.spooky.bittorrent.Showable
 
 sealed case class AbortPlaceholder(length: Int)
 sealed abstract class Thing

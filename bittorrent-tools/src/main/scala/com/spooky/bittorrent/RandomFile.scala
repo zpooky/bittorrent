@@ -5,6 +5,7 @@ import java.io.File
 import java.nio.file.StandardOpenOption
 import scala.util.Random
 import java.nio.ByteBuffer
+import com.spooky.bittorrent.u.GigaByte
 
 object RandomFile {
   def main(args: Array[String]): Unit = {

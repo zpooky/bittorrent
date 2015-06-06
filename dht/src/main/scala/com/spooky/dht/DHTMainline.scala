@@ -1,15 +1,15 @@
 package com.spooky.dht
 
-import java.math.BigInteger
 import com.spooky.bittorrent.InfoHash
 import com.spooky.bittorrent.metainfo.Torrent
+import com.spooky.dht.Node
 
-object DHT {
+object DHTMainline {
   //bootstrap nodes
-  def apply(id: NodeId, t: Torrent): DHT = new DHT(id)
+  def apply(id: InfoHash, t: Torrent): DHTMainline = new DHTMainline(id)
 }
 
-class DHT(id: NodeId) {
+class DHTMainline(id: InfoHash) {
 
   def request(search: InfoHash)(count: Int): List[Node] = {
     Nil

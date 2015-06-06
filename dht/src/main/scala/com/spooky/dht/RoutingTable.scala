@@ -1,4 +1,4 @@
-package com.spooky.dht
+package com.spooky
 
 import java.util.concurrent.ConcurrentHashMap
 import scala.util.Random

@@ -1,10 +1,10 @@
 package com.spooky.bittorrent.u
 
 import akka.util.ByteString
-import com.spooky.bittorrent.protocol.client.pwp.api.Showable
 import com.spooky.bittorrent.protocol.client.pwp.api.Unchoke
 import com.spooky.bittorrent.protocol.client.pwp.api.Choke
 import com.spooky.bittorrent.protocol.client.pwp.api.Cancel
+import com.spooky.bittorrent.Showable
 
 private sealed abstract class State
 private object N extends State

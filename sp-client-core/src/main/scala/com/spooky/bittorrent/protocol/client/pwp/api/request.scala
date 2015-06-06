@@ -13,11 +13,8 @@ import com.spooky.bittorrent.Checksum
 import com.spooky.bittorrent.Sha1
 import scala.annotation.tailrec
 import com.spooky.bittorrent.InfoHash
+import com.spooky.bittorrent.Showable
 
-trait Showable {
-  def toByteBuffer: ByteBuffer
-  def toByteString: ByteString = ByteString(toByteBuffer)
-}
 abstract class PeerWireMessage
 case class Handshake(infoHash: InfoHash, peerId: PeerId) extends PeerWireMessage with Showable {
   def toByteBuffer: ByteBuffer = {
