@@ -1,5 +1,7 @@
 package com.spooky.bencode
 
+import akka.util.ByteString
+
 trait BStream {
   def headChar: Char
   def headByte: Byte
@@ -28,4 +30,11 @@ class ByteBStream(bytes: Array[Byte], index: Int) extends BStream {
     }
     b.toString
   }
+}
+
+class ByteStringBStream(data: ByteString, index: Int) extends BStream {
+  def headChar = data(index).asInstanceOf[Char]
+  def headByte: Byte = data(index)
+  def tail: BStream = new ByteStringBStream(data, index + 1)
+  def isEmpty: Boolean = data.length == index
 }

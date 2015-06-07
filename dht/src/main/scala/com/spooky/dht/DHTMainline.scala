@@ -2,7 +2,6 @@ package com.spooky.dht
 
 import com.spooky.bittorrent.InfoHash
 import com.spooky.bittorrent.metainfo.Torrent
-import com.spooky.dht.Node
 
 object DHTMainline {
   //bootstrap nodes

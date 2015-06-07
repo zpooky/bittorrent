@@ -18,6 +18,7 @@ eclipse {
 					withXml {
 								  def node = it.asNode()
 								  node.appendNode('classpathentry', [combineaccessrules: 'false',kind:'src', path:'/bittorrent-shared'])
+								  node.appendNode('classpathentry', [combineaccessrules: 'false',kind:'src', path:'/bencode'])
 						  }
 				  }
 		  }
