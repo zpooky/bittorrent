@@ -17,7 +17,7 @@ case class PieceThing(length: Int) extends Thing
 object NoThing extends Thing
 class ChokePredictor(window: Size, session: ClientSession) {
   private[u] var outstanding: Long = 0
-
+  private var max: Long = 0
   //Write buffer(server) - incomming
   def incomming(l: Any): Unit = l match {
     case r: Request => update(r.length)
@@ -36,6 +36,11 @@ class ChokePredictor(window: Size, session: ClientSession) {
 
   private def update(l: Long): Unit = {
     outstanding = outstanding + l
+    max = Math.max(max, outstanding)
+//    if(outstanding <= 0){
+//      println(max)
+//      max = 0
+//    }
     tick
   }
 
@@ -47,6 +52,6 @@ class ChokePredictor(window: Size, session: ClientSession) {
     }
   }
   private def shouldChoke: Boolean = window.percentageFor(Size(outstanding, Byte)) > 90
-  private def shouldUnchoke: Boolean = window.percentageFor(Size(outstanding, Byte)) > 80
+  private def shouldUnchoke: Boolean = window.percentageFor(Size(outstanding, Byte)) < 60
 
 }

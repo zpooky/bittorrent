@@ -8,14 +8,15 @@ sealed case class BNone[T]() extends BOption
 
 sealed abstract class BValue {
   def toBencode: String
-  def toBDictionary: Option[BDictionary] = this match {
-    case (d: BDictionary) => Some(d)
-    case _                => None
-  }
-  def toBString: Option[BString] = this match {
-    case (s: BString) => Some(s)
-    case _            => None
-  }
+  def filter(f: BValue => Boolean): Option[BValue] = if(f(this)) Some(this) else None
+  //  def toBDictionary: Option[BDictionary] = this match {
+  //    case (d: BDictionary) => Some(d)
+  //    case _                => None
+  //  }
+  //  def toBString: Option[BString] = this match {
+  //    case (s: BString) => Some(s)
+  //    case _            => None
+  //  }
 }
 sealed case class BString(value: String) extends BValue {
   override def toBencode = value.length + ":" + value

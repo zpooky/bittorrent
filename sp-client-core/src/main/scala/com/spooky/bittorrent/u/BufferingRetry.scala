@@ -17,10 +17,10 @@ abstract class BufferingRetry(connection: ActorRef, session: ClientSession) exte
   private val log = new SimpleLog //Logging(context.system, this)
   private val chokePredictor = new ChokePredictor(KiloByte(63), /*Size(2, MegaByte), */ session) //TODO find out a way to get buffer size
 
-  def Ordering = new Ordering[Tuple2[ByteString, Ack]] {
+  private def ordering = new Ordering[Tuple2[ByteString, Ack]] {
     def compare(a: Tuple2[ByteString, Ack], b: Tuple2[ByteString, Ack]) = a._2.sequence.compare(b._2.sequence)
   }
-  private lazy val buffer = scala.collection.mutable.PriorityQueue[Tuple2[ByteString, Ack]]()(Ordering)
+  private lazy val buffer = scala.collection.mutable.PriorityQueue[Tuple2[ByteString, Ack]]()(ordering)
   private var outstanding = 0
   private var buffering = false
   private var sequence = 0
@@ -51,7 +51,7 @@ abstract class BufferingRetry(connection: ActorRef, session: ClientSession) exte
       data.apply(a)
     }
   }
-  def data: PartialFunction[Any, Unit]
+  protected def data: PartialFunction[Any, Unit]
   protected def write(message: Showable): Unit = write(message.toByteString, Thing(message))
   private def write(message: ByteString, t: Thing): Unit = buffering match {
     case true => {

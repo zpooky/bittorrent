@@ -18,19 +18,20 @@ class DHTMessageActor(connection: ActorRef) extends Actor {
   def receive: Receive = {
     case Message(data, sender) => {
       val parsed = DHT.parse(data)
-      if(parsed.isRight){
-      handle(parsed.right.get, sender)
-      } else ???
+      if (parsed.isRight) {
+        handle(parsed.right.get, sender)
+      }
     }
   }
   def handle(exchange: DHT.Exchange, sender: InetSocketAddress): Unit = exchange match {
-    case r: PingQuery =>
-    case r: PingResponse =>
-    case r: FindNodeQuery =>
-    case r: FindNodeResponse =>
-    case r: GetPeersQuery =>
-    case r: GetPeersResponse =>
-    case r: AnnouncePeersQuery =>
-    case r: AnnoucePeersResponse =>
+    case r => println(r)
+    //    case r: PingQuery =>
+    //    case r: PingResponse =>
+    //    case r: FindNodeQuery =>
+    //    case r: FindNodeResponse =>
+    //    case r: GetPeersQuery =>
+    //    case r: GetPeersResponse =>
+    //    case r: AnnouncePeersQuery =>
+    //    case r: AnnoucePeersResponse =>
   }
 }

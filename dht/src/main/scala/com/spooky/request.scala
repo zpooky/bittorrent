@@ -13,6 +13,10 @@ import scala.util.Right
 import com.spooky.bencode.BDictionary
 import com.spooky.bencode.BDictionary
 import com.spooky.bencode.BDictionary
+import com.spooky.bencode.BString
+import com.spooky.bencode.BString
+import com.spooky.bencode.BValue
+import com.spooky.bencode.BInteger
 
 sealed case class Message(data: ByteString, sender: InetSocketAddress)
 
@@ -24,7 +28,7 @@ object DHT {
           case Some(BString(transactionId)) => d.get("y") match {
             case Some(BString("q")) => parseQuery(transactionId, d)
             case Some(BString("r")) => parseResponse(transactionId, d)
-            case Some(BString("e")) => Right(ErrorResponse.parse(transactionId, d))
+            case Some(BString("e")) => ErrorResponse.parse(transactionId)(d).map(Right(_)).getOrElse(Left("Invalid exchange"))
             case Some(_)            => Left("Exchange type was not a String")
             case None               => Left("Missing exchange type")
           }
@@ -35,28 +39,38 @@ object DHT {
     }
   }
 
-  private def parseQuery(transactionId: String, request: BDictionary): Either[String, Exchange] = request.get("q") match {
-    case Some(BString("ping"))          => Right(PingQuery.parse(transactionId, request))
-    case Some(BString("find_node"))     => Right(FindNodeQuery.parse(transactionId, request))
-    case Some(BString("get_peers"))     => Right(GetPeersQuery.parse(transactionId, request))
-    case Some(BString("announce_peer")) => Right(AnnouncePeersQuery.parse(transactionId, request))
+  private def parseQuery(transactionId: String, request: BDictionary): Either[String, Exchange] = {
+    val pf = p[Query](request) _
+    request.get("q") match {
+      case Some(BString("ping"))          => pf(PingQuery.parse(transactionId))
+      case Some(BString("find_node"))     => pf(FindNodeQuery.parse(transactionId))
+      case Some(BString("get_peers"))     => pf(GetPeersQuery.parse(transactionId))
+      case Some(BString("announce_peer")) => pf(AnnouncePeersQuery.parse(transactionId))
 
-    case Some(BString(query))           => Left(s"Unknown method ${query}")
-    case Some(_)                        => Left("Corrupt message")
-    case None                           => Left("Missing query type")
+      case Some(BString(query))           => Left(s"Unknown method ${query}")
+      case Some(_)                        => Left("Corrupt message")
+      case None                           => Left("Missing query type")
+    }
   }
-  private def parseResponse(transactionId: String, request: BDictionary): Either[String, Exchange] = request.get("r") match {
-    case Some(d: BDictionary) if d.get("nodes").isDefined => Right(FindNodeResponse.parse(transactionId, request))
-    case Some(d: BDictionary) if d.get("token").isDefined => Right(GetPeersResponse.parse(transactionId, request))
-    case Some(d: BDictionary) if d.get("id").isDefined => Right(PingResponse.parse(transactionId, request))
-    case Some(d: BDictionary) if d.get("id").isDefined => Right(AnnoucePeersResponse.parse(transactionId, request)) //TODO will never be called
-    case Some(_) => Left("l")
-    case None => Left("k")
-
+  private def parseResponse(transactionId: String, request: BDictionary): Either[String, Exchange] = {
+    val pf = p[Response](request) _
+    request.get("r") match {
+      case Some(d: BDictionary) if d.get("nodes").isDefined => pf(FindNodeResponse.parse(transactionId))
+      case Some(d: BDictionary) if d.get("token").isDefined => pf(GetPeersResponse.parse(transactionId))
+      case Some(d: BDictionary) if d.get("id").isDefined => pf(PingResponse.parse(transactionId))
+      case Some(d: BDictionary) if d.get("id").isDefined => pf(AnnoucePeersResponse.parse(transactionId)) //TODO will never be called
+      case Some(_) => Left("l")
+      case None => Left("k")
+    }
+  }
+  private def p[E <: Exchange](request: BDictionary)(f: BDictionary => Option[E]): Either[String, E] = request.get("a") match {
+    case Some(d: BDictionary) => f(d).map(Right(_)).getOrElse(Left("Invalid exchange"))
+    case Some(_)              => Left("a is not a dict")
+    case None                 => Left("a is missing")
   }
 
   trait Parser {
-    def parse(transactionId: String, exchange: BDictionary): Exchange
+    def parse(transactionId: String)(data: BDictionary): Option[Exchange]
   }
 
   sealed abstract class Exchange(transactionId: String)
@@ -67,48 +81,89 @@ object DHT {
   //{"t":"aa", "y":"q", "q":"ping", "a":{"id":"abcdefghij0123456789"}}
   sealed case class PingQuery(nodeId: InfoHash, transactionId: String) extends Query(nodeId, transactionId)
   object PingQuery extends Parser {
-    def parse(transactionId: String, data: BDictionary): PingQuery = {
-      ???
+    def parse(transactionId: String)(data: BDictionary): Option[PingQuery] = {
+      println(transactionId + "|" + data)
+      //      data.get("id") match {
+      //        case Some(BString(s)) => Some(PingQuery(InfoHash.hex(s), transactionId))
+      //        case _                => ???
+      //      }
+      for {
+        nodeId <- data.get("id")
+        BString(id) <- nodeId
+      } yield PingQuery(InfoHash.hex(id), transactionId)
     }
   }
   //{"t":"aa", "y":"r", "r": {"id":"mnopqrstuvwxyz123456"}}
   sealed case class PingResponse(nodeId: InfoHash, transactionId: String) extends Response(nodeId, transactionId)
   object PingResponse extends Parser {
-    def parse(transactionId: String, data: BDictionary): PingResponse = {
-      ???
+    def parse(transactionId: String)(data: BDictionary): Option[PingResponse] = {
+      for {
+        nodeId <- data.get("id")
+        BString(id) <- nodeId
+      } yield PingResponse(InfoHash.hex(id), transactionId)
     }
   }
 
   //{"t":"aa", "y":"q", "q":"find_node", "a": {"id":"abcdefghij0123456789", "target":"mnopqrstuvwxyz123456"}}
   sealed case class FindNodeQuery(nodeId: InfoHash, target: String, transactionId: String) extends Query(nodeId, transactionId)
   object FindNodeQuery extends Parser {
-    def parse(transactionId: String, data: BDictionary): FindNodeQuery = {
-      ???
+    def parse(transactionId: String)(data: BDictionary): Option[FindNodeQuery] = {
+      for {
+        nodeId <- data.get("id")
+        BString(id) <- nodeId
+        target <- data.get("target")
+        BString(t) <- target
+      } yield FindNodeQuery(InfoHash.hex(id), t, transactionId)
     }
   }
   //{"t":"aa", "y":"r", "r": {"id":"0123456789abcdefghij", "nodes": "def456..."}}
   sealed case class FindNodeResponse(nodeId: InfoHash, nodes: NodeInfo, transactionId: String) extends Response(nodeId, transactionId)
   object FindNodeResponse {
-    def parse(transactionId: String, data: BDictionary): FindNodeResponse = {
-      ???
+    def parse(transactionId: String)(data: BDictionary): Option[FindNodeResponse] = {
+      for {
+        nodeId <- data.get("id")
+        BString(id) <- nodeId
+        nodes <- data.get("nodes")
+        nodeInfo <- NodeInfo.parse(nodes)
+      } yield FindNodeResponse(InfoHash.hex(id), nodeInfo, transactionId)
     }
   }
 
   //Compact node info = 26-byte string: InfoHash(20)|ip(4)|port(2)
   sealed case class NodeInfo(nodeId: InfoHash, address: Address)
+  object NodeInfo {
+    def parse(v: BValue): Option[NodeInfo] = v match {
+      case BString(s) => {
+        None
+      }
+      case _ => None
+    }
+  }
 
   //{"t":"aa", "y":"q", "q":"get_peers", "a": {"id":"abcdefghij0123456789", "info_hash":"mnopqrstuvwxyz123456"}}
   sealed case class GetPeersQuery(nodeId: InfoHash, infoHash: InfoHash, transactionId: String) extends Query(nodeId, transactionId)
   object GetPeersQuery extends Parser {
-    def parse(transactionId: String, data: BDictionary): GetPeersQuery = {
-      ???
+    def parse(transactionId: String)(data: BDictionary): Option[GetPeersQuery] = {
+      for {
+        nId <- data.get("id")
+        BString(nodeId) <- nId
+        infoHash <- data.get("info_hash")
+        BString(ih) <- infoHash
+      } yield GetPeersQuery(InfoHash.hex(nodeId), InfoHash.hex(ih), transactionId)
     }
   }
   //{"t":"aa", "y":"r", "r": {"id":"abcdefghij0123456789", "token":"aoeusnth", "values": ["axje.u", "idhtnm"]}}
   //or: {"t":"aa", "y":"r", "r": {"id":"abcdefghij0123456789", "token":"aoeusnth", "nodes": "def456..."}}
   sealed case class GetPeersResponse(nodeId: InfoHash, token: Token, nodes: List[NodeInfo], transactionId: String) extends Response(nodeId, transactionId)
   object GetPeersResponse extends Parser {
-    def parse(transactionId: String, data: BDictionary): GetPeersResponse = {
+    def parse(transactionId: String)(data: BDictionary): Option[GetPeersResponse] = {
+//      for {
+//        nId <- data.get("id")
+//        BString(nodeId) <- nId
+//
+//        t <- data.get("token")
+//        BString(token) <- t
+//      } yield GetPeersResponse(InfoHash.hex(nodeId), Token(token, null), nodes, transactionId)
       ???
     }
   }
@@ -116,14 +171,29 @@ object DHT {
   //{"t":"aa", "y":"q", "q":"announce_peer", "a": {"id":"abcdefghij0123456789", "implied_port": 1, "info_hash":"mnopqrstuvwxyz123456", "port": 6881, "token": "aoeusnth"}}
   sealed case class AnnouncePeersQuery(nodeId: InfoHash, impliedPort: Boolean, infoHash: InfoHash, port: Short, token: Token, transactionId: String) extends Query(nodeId, transactionId)
   object AnnouncePeersQuery extends Parser {
-    def parse(transactionId: String, data: BDictionary): AnnouncePeersQuery = {
-      ???
+    def parse(transactionId: String)(data: BDictionary): Option[AnnouncePeersQuery] = {
+      for {
+        nId <- data.get("id")
+        BString(nodeId) <- nId
+
+        iP <- data.get("implied_port")
+        BInteger(impliedPort) <- iP
+
+        ih <- data.get("info_hash")
+        BString(infoHash) <- ih
+
+        p <- data.get("port")
+        BInteger(port) <- p
+
+        t <- data.get("token")
+        BString(token) <- t
+      } yield AnnouncePeersQuery(InfoHash.hex(nodeId), impliedPort == 1, InfoHash.hex(infoHash), port.toShort, Token(token, null), transactionId)
     }
   }
   //response: {"t":"aa", "y":"r", "r": {"id":"mnopqrstuvwxyz123456"}}
   sealed case class AnnoucePeersResponse(nodeId: InfoHash, transactionId: String) extends Response(nodeId, transactionId)
   object AnnoucePeersResponse extends Parser {
-    def parse(transactionId: String, data: BDictionary): AnnoucePeersResponse = {
+    def parse(transactionId: String)(data: BDictionary): Option[AnnoucePeersResponse] = {
       ???
     }
   }
@@ -150,7 +220,7 @@ object DHT {
   }
   sealed case class ErrorResponse(transactionId: String, code: ErrorCode, message: String)
   object ErrorResponse extends Parser {
-    def parse(transactionId: String, data: BDictionary): PingQuery = {
+    def parse(transactionId: String)(data: BDictionary): Option[PingQuery] = {
       ???
     }
   }
