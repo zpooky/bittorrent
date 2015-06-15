@@ -5,6 +5,8 @@ allprojects {
 		mavenCentral()
 	}
 
+	group = "com.spooky.bittorrent"
+	version = "1.0-SNAPSHOT"
 
 //	plugins {
 //		id "us.kirchmeier.capsule" version "1.0-rc1"
