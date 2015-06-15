@@ -33,14 +33,14 @@ configurations {
 }
 
 //API Project specific stuff
-project(':message-stream-encryption') {
+project(':com.spooky.bittorrent-message-stream-encryption') {
 //	dependencies.compile project(':bittorrent-shared')
 }
 
 //Common Project specific stuff
-//project(':bittorrent-shared') {
+//project(':com.spooky.bittorrent-shared') {
 //}
 
 //App Project specific stuff
-//project(':sp-client-core') {
+//project(':com.spooky.bittorrent-core') {
 //}

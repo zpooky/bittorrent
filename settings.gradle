@@ -1,4 +1,12 @@
-include 'bittorent-shared', 'message-stream-encryption', 'sp-client-core', 'bencode', 'dht', 'bittorrent-tools'
+include 'shared', 'message-stream-encryption', 'core', 'bencode', 'dht', 'tools'
 
+//rootProject.children.each { it.name = "com.spooky.bittorrent-" + it.name }
+
+prefixProjectName(rootProject, "com.spooky.bittorrent-")
+
+def prefixProjectName(project, prefix) {
+  project.name = prefix + project.name
+	project.children.each { prefixProjectName(it, prefix) }
+}
 
 //rootProject.name = 'sp-client-core'
