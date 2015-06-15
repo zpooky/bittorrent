@@ -1,2 +1,24 @@
 
 https://tersesystems.com/2014/08/19/exposing-akka-actor-state-with-jmx/
+
+
+-verbose:gc
+-Xloggc:vm.log
+-XX:+UnlockCommercialFeatures 
+-XX:+FlightRecorder 
+-XX:FlightRecorderOptions=samplethreads=true 
+-Dcom.sun.management.jmxremote 
+-Dcom.sun.management.jmxremote.port=9191 
+-Dcom.sun.management.jmxremote.authenticate=false 
+-Dcom.sun.management.jmxremote.ssl=false 
+-Djava.rmi.server.hostname=localhost
+
+-XX:+HeapDumpOnOutOfMemoryError 
+-XX:HeapDumpPath=outofmemory.log
+-XX:-PrintConcurrentLocks
+
+-Xmx256m
+-Xms256m
+-server
+
+-XX:+UseCompressedOops

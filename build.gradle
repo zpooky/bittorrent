@@ -1,5 +1,18 @@
 allprojects {
-	//Put instructions for all projects
+
+	repositories {
+	 	jcenter()
+		mavenCentral()
+	}
+
+
+//	plugins {
+//		id "us.kirchmeier.capsule" version "1.0-rc1"
+//	}
+	
+//	fatCapsule(type: FatCapsule) {
+//	  applicationClass 'com.spooky.bittorrent.BittorrentClient'
+//	}
 }
 
 subprojects {

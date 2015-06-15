@@ -5,5 +5,6 @@ import akka.util.ByteString
 
 trait Showable {
   def toByteBuffer: ByteBuffer
+//  def toByteString: ByteString = BStrings(toByteBuffer)
   def toByteString: ByteString = ByteString(toByteBuffer)
 }

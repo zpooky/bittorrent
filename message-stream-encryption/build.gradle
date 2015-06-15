@@ -1,16 +1,15 @@
 apply plugin: 'scala'
 apply plugin: 'eclipse'
 
-repositories {
-    jcenter()
-}
+repositories { jcenter() }
 
 dependencies {
 	compile 'com.jsuereth:scala-arm_2.11:1.4'
 	compile 'commons-codec:commons-codec:1.10'
 	compile 'org.bouncycastle:bcprov-jdk15on:1.51'
 	testCompile 'org.scalatest:scalatest_2.11:2.2.3'
-	
+	compile 'org.scala-lang:scala-library:2.11.6'
+	compile 'org.scala-lang:scala-reflect:2.11.6'
 }
 
 eclipse {
@@ -20,8 +19,8 @@ eclipse {
 		file {
 			withXml {
 				def node = it.asNode()
-					node.appendNode('classpathentry', [combineaccessrules: 'false',kind:'src', path:'/bittorrent-shared'])
-}
-}
-}
+				node.appendNode('classpathentry', [combineaccessrules: 'false',kind:'src', path:'/bittorrent-shared'])
+			}
+		}
+	}
 }
