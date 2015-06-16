@@ -11,6 +11,7 @@ dependencies {
 	//misc
 	compile 'commons-codec:commons-codec:1.10'
 	compile 'com.google.code.gson:gson:2.3.1'
+	compile 'joda-time:joda-time:2.8.1'
 
 	//akka actors
 	compile 'com.typesafe.akka:akka-actor_2.11:2.3.6'
@@ -27,28 +28,20 @@ dependencies {
 	compile 'org.bouncycastle:bcprov-jdk15on:1.51'
 
 	testCompile 'org.scalatest:scalatest_2.11:2.2.3'
+
+
+	compile (
+			project(':com.spooky.bittorrent-shared'),
+			project(':com.spooky.bittorrent-message-stream-encryption'),
+			project(':com.spooky.bittorrent-bencode'),
+			project(':com.spooky.bittorrent-dht'),
+			)
 }
 
 mainClassName = "com.spooky.bittorrent.BittorrentClient"
 
 jar {
 	manifest { attributes 'Main-Class': mainClassName }
-}
-
-eclipse {
-	project {
-	}
-	classpath {
-		file {
-			withXml {
-				def node = it.asNode()
-				node.appendNode('classpathentry', [combineaccessrules: 'false',kind:'src', path:'/bittorrent-shared'])
-				node.appendNode('classpathentry', [combineaccessrules: 'false',kind:'src', path:'/message-stream-encryption'])
-				node.appendNode('classpathentry', [combineaccessrules: 'false',kind:'src', path:'/bencode'])
-				node.appendNode('classpathentry', [combineaccessrules: 'false',kind:'src', path:'/dht'])
-			}
-		}
-	}
 }
 
 //buildscript {
@@ -63,7 +56,41 @@ buildscript {
 task fatCapsule(type: FatCapsule) {
 	applicationClass mainClassName
 	classifier 'fat'
+	archiveName = "spooky-bittorrent-" + version + ".jar"
+
 	capsuleManifest {
-		//		systemProperties = ['java.awt.headless': true]
+		systemProperties = ['java.awt.headless': true]
+		jvmArgs = [
+			//gc
+			"-verbose:gc",
+			"-Xloggc:vm.log",
+			//profile
+			"-XX:+UnlockCommercialFeatures",
+			"-XX:+FlightRecorder",
+			"-XX:FlightRecorderOptions=samplethreads=true",
+			"-Dcom.sun.management.jmxremote",
+			"-Dcom.sun.management.jmxremote.port=9191",
+			"-Dcom.sun.management.jmxremote.authenticate=false",
+			"-Dcom.sun.management.jmxremote.ssl=false",
+			"-Djava.rmi.server.hostname=localhost",
+			//crash log
+			"-XX:+HeapDumpOnOutOfMemoryError",
+			"-XX:HeapDumpPath=outofmemory.log",
+			"-XX:-PrintConcurrentLocks",
+			//memory
+			"-Xmx256m",
+			"-Xms256m",
+			//jvm
+			"-server",
+			"-XX:+UseCompressedOops"
+		]
+	}
+
+	manifest {
+		attributes(
+				'Min-Java-Version' : '1.8.0',
+				'JVM-Args' : run.jvmArgs.join(' '), // copy JVM args from the run task
+				'System-Properties' : run.systemProperties.collect { k,v -> "$k=$v" }.join(' '), // copy system properties
+				)
 	}
 }

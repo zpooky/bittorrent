@@ -10,17 +10,8 @@ dependencies {
 	testCompile 'org.scalatest:scalatest_2.11:2.2.3'
 	compile 'org.scala-lang:scala-library:2.11.6'
 	compile 'org.scala-lang:scala-reflect:2.11.6'
-}
-
-eclipse {
-	project {
-	}
-	classpath {
-		file {
-			withXml {
-				def node = it.asNode()
-				node.appendNode('classpathentry', [combineaccessrules: 'false',kind:'src', path:'/bittorrent-shared'])
-			}
-		}
-	}
+	
+	compile (
+		project(':com.spooky.bittorrent-shared'),
+   )
 }
