@@ -36,9 +36,8 @@ object BittorrentClient {
   }
 
   def debian() = {
-	  println(BittorrentClient.getClass.getResource("/debian.torrent"))
-	  println(BittorrentClient.getClass.getResource("/debian.torrent").toURI)
-    val file = new File(BittorrentClient.getClass.getResource("/debian.torrent").toURI)
+    println(BittorrentClient.getClass.getResource("/debian.torrent").toURI)
+    val file = new File(BittorrentClient.getClass.getResource("/debian.torrent").getFile)
     println(file)
     val torrent = Torrents(file)
     println("infoHash:" + torrent.infoHash)
@@ -51,12 +50,14 @@ object BittorrentClient {
     TorrentSetup(torrent, Paths.get("O:\\tmp\\"))
   }
 
-  def setupLog = {
-    println(s"log root: ${getRoot}")
-    val err = new File(getRoot, s"err-${logTimestamp}.log")
-    System.setErr(new PrintStream(err))
-    val out = new File(getRoot, s"out-${logTimestamp}.log")
-    System.setOut(new PrintStream(out))
+  def setupLog: Unit = {
+    if (System.getProperty("std.out.file") != null) {
+      println(s"log root: ${getRoot}")
+      val err = new File(getRoot, s"err-${logTimestamp}.log")
+      System.setErr(new PrintStream(err))
+      val out = new File(getRoot, s"out-${logTimestamp}.log")
+      System.setOut(new PrintStream(out))
+    }
   }
 
   def getRoot: File = {
@@ -68,9 +69,9 @@ object BittorrentClient {
     log
   }
 
-  def logTimestamp = {
+  def logTimestamp:String = {
     val now = DateTime.now
-    val fmt = DateTimeFormat.forPattern("yyyy-dd-MM-HH-mm-ss");
+    val fmt = DateTimeFormat.forPattern("yyyyddMM_HH-mm-ss");
     fmt.print(now);
   }
 }

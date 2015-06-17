@@ -59,7 +59,7 @@ task fatCapsule(type: FatCapsule) {
 	archiveName = "spooky-bittorrent-" + version + ".jar"
 
 	capsuleManifest {
-		systemProperties = ['java.awt.headless': true]
+		systemProperties = ['std.out.file': true]
 		jvmArgs = [
 			//gc
 			"-verbose:gc",
