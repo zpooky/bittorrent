@@ -12,4 +12,5 @@ dependencies {
 	compile (
 		project(':com.spooky.bittorrent-shared'),
    )
+	testCompile 'org.scalatest:scalatest_2.11:2.2.3'
 }

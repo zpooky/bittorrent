@@ -75,12 +75,22 @@ object DHT {
 
   sealed abstract class Exchange(transactionId: String)
 
-  sealed abstract class Query(nodeId: InfoHash, transactionId: String) extends Exchange(transactionId)
+  sealed abstract class Query(transactionId: String) extends Exchange(transactionId)
   sealed abstract class Response(nodeId: InfoHash, transactionId: String) extends Exchange(transactionId)
 
+  case class IdArgument(private[DHT] val id: Array[Byte])
+  object IdArgument {
+    def apply(infoHash: InfoHash): IdArgument = IdArgument(infoHash.sum)
+  }
+
   //{"t":"aa", "y":"q", "q":"ping", "a":{"id":"abcdefghij0123456789"}}
-  sealed case class PingQuery(nodeId: InfoHash, transactionId: String) extends Query(nodeId, transactionId)
+  sealed case class PingQuery(private val t: String, private val y: String = "q", private val q: String = "ping", private val a: IdArgument) extends Query(t) {
+    def transactionId: String = t
+    def nodeId: InfoHash = InfoHash(a.id)
+  }
   object PingQuery extends Parser {
+    def apply(nodeId: InfoHash, transactionId: String): PingQuery = PingQuery(t = transactionId, a = IdArgument(nodeId))
+
     def parse(transactionId: String)(data: BDictionary): Option[PingQuery] = {
       println(transactionId + "|" + data)
       //      data.get("id") match {
@@ -105,7 +115,7 @@ object DHT {
   }
 
   //{"t":"aa", "y":"q", "q":"find_node", "a": {"id":"abcdefghij0123456789", "target":"mnopqrstuvwxyz123456"}}
-  sealed case class FindNodeQuery(nodeId: InfoHash, target: String, transactionId: String) extends Query(nodeId, transactionId)
+  sealed case class FindNodeQuery(nodeId: InfoHash, target: String, transactionId: String) extends Query( transactionId)
   object FindNodeQuery extends Parser {
     def parse(transactionId: String)(data: BDictionary): Option[FindNodeQuery] = {
       for {
@@ -141,7 +151,7 @@ object DHT {
   }
 
   //{"t":"aa", "y":"q", "q":"get_peers", "a": {"id":"abcdefghij0123456789", "info_hash":"mnopqrstuvwxyz123456"}}
-  sealed case class GetPeersQuery(nodeId: InfoHash, infoHash: InfoHash, transactionId: String) extends Query(nodeId, transactionId)
+  sealed case class GetPeersQuery(nodeId: InfoHash, infoHash: InfoHash, transactionId: String) extends Query( transactionId)
   object GetPeersQuery extends Parser {
     def parse(transactionId: String)(data: BDictionary): Option[GetPeersQuery] = {
       for {
@@ -157,19 +167,19 @@ object DHT {
   sealed case class GetPeersResponse(nodeId: InfoHash, token: Token, nodes: List[NodeInfo], transactionId: String) extends Response(nodeId, transactionId)
   object GetPeersResponse extends Parser {
     def parse(transactionId: String)(data: BDictionary): Option[GetPeersResponse] = {
-//      for {
-//        nId <- data.get("id")
-//        BString(nodeId) <- nId
-//
-//        t <- data.get("token")
-//        BString(token) <- t
-//      } yield GetPeersResponse(InfoHash.hex(nodeId), Token(token, null), nodes, transactionId)
+      //      for {
+      //        nId <- data.get("id")
+      //        BString(nodeId) <- nId
+      //
+      //        t <- data.get("token")
+      //        BString(token) <- t
+      //      } yield GetPeersResponse(InfoHash.hex(nodeId), Token(token, null), nodes, transactionId)
       ???
     }
   }
 
   //{"t":"aa", "y":"q", "q":"announce_peer", "a": {"id":"abcdefghij0123456789", "implied_port": 1, "info_hash":"mnopqrstuvwxyz123456", "port": 6881, "token": "aoeusnth"}}
-  sealed case class AnnouncePeersQuery(nodeId: InfoHash, impliedPort: Boolean, infoHash: InfoHash, port: Short, token: Token, transactionId: String) extends Query(nodeId, transactionId)
+  sealed case class AnnouncePeersQuery(nodeId: InfoHash, impliedPort: Boolean, infoHash: InfoHash, port: Short, token: Token, transactionId: String) extends Query( transactionId)
   object AnnouncePeersQuery extends Parser {
     def parse(transactionId: String)(data: BDictionary): Option[AnnouncePeersQuery] = {
       for {

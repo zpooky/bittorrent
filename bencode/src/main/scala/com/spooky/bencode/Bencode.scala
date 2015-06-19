@@ -1,6 +1,7 @@
 package com.spooky.bencode
 
 import scala.reflect.io.Streamable.Bytes
+import java.nio.charset.Charset
 
 sealed abstract class BOption
 sealed case class BSome[T](value: T) extends BOption
@@ -8,7 +9,7 @@ sealed case class BNone[T]() extends BOption
 
 sealed abstract class BValue {
   def toBencode: String
-  def filter(f: BValue => Boolean): Option[BValue] = if(f(this)) Some(this) else None
+  def filter(f: BValue => Boolean): Option[BValue] = if (f(this)) Some(this) else None
   //  def toBDictionary: Option[BDictionary] = this match {
   //    case (d: BDictionary) => Some(d)
   //    case _                => None
@@ -35,5 +36,5 @@ sealed case class BDictionary(value: List[Tuple2[BString, BValue]]) extends BVal
   override def toBencode = value.foldLeft(StringBuilder.newBuilder.append("d"))((previous, current) => previous.append(current._1.toBencode).append(current._2.toBencode)).toString + "e"
 }
 case class BChecksum(value: Array[Byte]) extends BValue {
-  override def toBencode = ???
+  override def toBencode = BString(new String(value, Charset.forName("UTF8"))).toBencode
 }
