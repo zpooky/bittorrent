@@ -14,7 +14,7 @@ class DHTServer extends Actor {
   import context.system
   IO(Udp) ! Udp.Bind(self, new InetSocketAddress(Config.hostname, Config.dhtPort))
 
-  lazy val handler = system.actorOf(Props(classOf[DHTMessageActor], self))
+  lazy val handler = system.actorOf(Props(classOf[DHTMessageActor]))
 
   def receive = {
     case Udp.CommandFailed(_: Udp.Bind) => {
@@ -22,7 +22,7 @@ class DHTServer extends Actor {
     }
     case Udp.SimpleSenderReady =>
     case Udp.Received(data, remote) => {
-      handler ! Message(data, remote)
+      handler ! Message(data, remote, sender())
     }
     case l @ Udp.Bound =>
     case Udp.Unbind    => sender ! Udp.Unbind

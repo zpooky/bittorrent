@@ -13,13 +13,22 @@ import com.spooky.DHT.GetPeersQuery
 import com.spooky.DHT.GetPeersResponse
 import com.spooky.DHT.AnnouncePeersQuery
 import com.spooky.DHT.AnnoucePeersResponse
+import com.spooky.bencode.ByteStringBStream
+import akka.io.Udp
+import akka.util.ByteString
 
-class DHTMessageActor(connection: ActorRef) extends Actor {
+class DHTMessageActor extends Actor {
   def receive: Receive = {
-    case Message(data, sender) => {
-      val parsed = DHT.parse(data)
-      if (parsed.isRight) {
-        handle(parsed.right.get, sender)
+    case Message(data, address, sender) => {
+      if (data.isEmpty) {
+        println(s"data was empty from ${address.getAddress}")
+        sender ! Udp.Send(ByteString("error"), address)
+      } else {
+        println(data.length + "|" + new ByteStringBStream(data, 0))
+        val parsed = DHT.parse(data)
+        if (parsed.isRight) {
+          handle(parsed.right.get, address)
+        } else println(parsed.left)
       }
     }
   }

@@ -16,6 +16,7 @@ import com.spooky.bittorrent.InfoHash
 case class Node(nodeId: InfoHash, address: Address, token: Token, stateInfo: StateInfo)
 //Compact IP-address/port info 6 bytes = ip(4)|port(2)
 case class Address(ip: String, port: Short)
+case class TransactionId(raw: Array[Byte])
 sealed abstract class NodeState
 object Good extends NodeState
 object Bad extends NodeState

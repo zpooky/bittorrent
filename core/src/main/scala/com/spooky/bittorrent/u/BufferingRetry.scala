@@ -15,7 +15,7 @@ case class Ack(sequence: Int, t: Thing) extends Event
 abstract class BufferingRetry(connection: ActorRef, session: ClientSession) extends Actor {
 
   private val log = new SimpleLog //Logging(context.system, this)
-  private val chokePredictor = new ChokePredictor(KiloByte(63), /*Size(2, MegaByte), */ session) //TODO find out a way to get buffer size
+  private val chokePredictor = new ChokePredictor(Byte(65536), /*Size(2, MegaByte), */ session) //TODO find out a way to get buffer size
 
   private def ordering = new Ordering[Tuple2[ByteString, Ack]] {
     def compare(a: Tuple2[ByteString, Ack], b: Tuple2[ByteString, Ack]) = a._2.sequence.compare(b._2.sequence)

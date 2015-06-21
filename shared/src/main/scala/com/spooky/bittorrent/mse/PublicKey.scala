@@ -2,6 +2,7 @@ package com.spooky.bittorrent.mse
 
 import java.nio.ByteBuffer
 import com.spooky.bittorrent.RawWrapper
+import org.apache.commons.codec.binary.Hex
 
 sealed case class PublicKey(override val raw: Array[Byte]) extends RawWrapper(raw)
   object PublicKey extends Base {
@@ -56,5 +57,11 @@ sealed case class PublicKey(override val raw: Array[Byte]) extends RawWrapper(ra
     val raw = new Array[Byte](96)
     buffer.get(raw)
     PublicKey(raw)
+  }
+  
+  def hex(hex:String): PublicKey = {
+    assert(hex.length >= (96*2))
+    val decoded = Hex.decodeHex(hex.toCharArray())
+    PublicKey(decoded.take(96))
   }
 }

@@ -8,6 +8,7 @@ object Bencode extends BaseBencode
 abstract class BaseBencode {
 
   def decode(stream: String): BValue = {
+    //ONLY FOR test
     decode(new StringBStream(stream))
   }
 
@@ -28,7 +29,7 @@ abstract class BaseBencode {
     case 'l' %:: tail         => decodeList(tail)
     case 'd' %:: tail         => decodeDictionary(tail)
     case c %:: _ if c.isDigit => decodeString(stream)
-    case _                    => throw new RuntimeException("Unknown type")
+    case c                    => throw new RuntimeException(s"Unknown type '${c}'")
   }
 
   private def decodeInteger(stream: BStream): Tuple2[BStream, BInteger] = {
@@ -104,5 +105,6 @@ abstract class BaseBencode {
     case stream if stream.isEmpty => throw new RuntimeException("stream is empty: " + builder.toString)
     case c %:: tail if c.isDigit  => getLength(tail, builder.append(c))
     case ':' %:: tail             => (tail, builder.toInt)
+    case c %:: tail               => throw new RuntimeException(s"Not an number or a ':' actually: '$c'|builder: '$builder'|tail: '$tail'")
   }
 }

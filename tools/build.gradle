@@ -9,5 +9,6 @@ dependencies {
 	
 	compile (
 		project(':com.spooky.bittorrent-shared'),
+		project(':com.spooky.bittorrent-bencode'),
    )
 }

@@ -16,6 +16,11 @@ sealed case class InfoHash(sum: Array[Byte]) {
 object InfoHash {
   def apply(sha1: Sha1): InfoHash = InfoHash(sha1.raw)
   def hex(hex: String): InfoHash = InfoHash(Hex.decodeHex(hex.toCharArray()))
+  def parse(arr: Array[Byte]): InfoHash = {
+    println(arr.length)
+    assert(arr.length >= 20)
+    InfoHash(arr.take(20))
+  }
   def parse(buffer: ByteBuffer): InfoHash = {
     assert(buffer.remaining >= 20)
     val result = new Array[Byte](20)
