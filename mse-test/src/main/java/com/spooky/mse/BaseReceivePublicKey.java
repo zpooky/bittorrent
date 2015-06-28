@@ -21,7 +21,7 @@ public class BaseReceivePublicKey extends Base {
 		this.keyAgreement = keyAgreement;
 	}
 
-	protected Tuple<RemotePublicKey, SecretKey> parse(ByteBuffer require) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, IllegalStateException {
+	public Tuple<RemotePublicKey, SecretKey> parse(ByteBuffer require) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, IllegalStateException {
 		byte[] buffer = require.array();
 		BigInteger other_dh_y = bytesToBigInteger(buffer, 0, DH_SIZE_BYTES);
 

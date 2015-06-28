@@ -3,8 +3,14 @@ package com.spooky.mse;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.ThreadLocalRandom;
 
+import javax.crypto.spec.SecretKeySpec;
+
+import com.spooky.mse.o.SecretKey;
+import com.spooky.mse.o.SharedSecret;
 import com.spooky.mse.u.ByteFormatter;
 
 public class Base {
@@ -75,5 +81,35 @@ public class Base {
 			}
 		}
 		return true;
+	}
+
+	protected static SecretKeySpec a(SecretKey secretBytes, SharedSecret sharedSecret) throws NoSuchAlgorithmException {
+		byte[] secret_bytes = secretBytes.raw;
+		byte[] shared_secret = sharedSecret.raw;
+
+		MessageDigest hasher = MessageDigest.getInstance("SHA1");
+		hasher.update(KEYA_IV);
+		hasher.update(secret_bytes);
+		hasher.update(shared_secret);
+
+		byte[] a_key = hasher.digest();
+
+		SecretKeySpec secret_key_spec_a = new SecretKeySpec(a_key, RC4_STREAM_ALG);
+		return secret_key_spec_a;
+	}
+
+	protected static SecretKeySpec b(SecretKey secretBytes, SharedSecret sharedSecret) throws NoSuchAlgorithmException {
+		byte[] secret_bytes = secretBytes.raw;
+		byte[] shared_secret = sharedSecret.raw;
+		MessageDigest hasher = MessageDigest.getInstance("SHA1");
+
+		hasher.update(KEYB_IV);
+		hasher.update(secret_bytes);
+		hasher.update(shared_secret);
+
+		byte[] b_key = hasher.digest();
+
+		SecretKeySpec secret_key_spec_b = new SecretKeySpec(b_key, RC4_STREAM_ALG);
+		return secret_key_spec_b;
 	}
 }

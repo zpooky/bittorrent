@@ -1,10 +1,11 @@
-package com.spooky.mse;
+package com.spooky.mse.outbound;
 
 import java.nio.ByteBuffer;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
+import com.spooky.mse.PublicKeyBase;
 import com.spooky.mse.io.Writer;
 import com.spooky.mse.o.SKey;
 

@@ -1,10 +1,11 @@
-package com.spooky.mse;
+package com.spooky.mse.inbound;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 import javax.crypto.KeyAgreement;
 
+import com.spooky.mse.Base;
 import com.spooky.mse.io.Writer;
 import com.spooky.mse.o.LocalPublicKey;
 import com.spooky.mse.o.RemotePublicKey;
@@ -29,7 +30,7 @@ public class SendPublicKey extends Base {
 
 	public ReceiveInfo sendPublicKey(Writer writer) throws Exception {
 		write(writer);
-		return new ReceiveInfo(skey, publicKey, keyAgreement, remotePublicKey, secret);
+		return new ReceiveInfo(skey, publicKey, remotePublicKey, secret);
 	}
 
 	private void write(Writer writer) throws Exception {

@@ -10,4 +10,6 @@ public interface Reader {
 	void require(byte[] bs) throws Exception;
 
 	void require(ByteBuffer initialPayload) throws Exception;
+
+	ByteBuffer read() throws Exception;
 }
