@@ -22,19 +22,19 @@ public class Confirm extends Base {
 		TransportCipher writeCipher = mseKeyPair.writeCipher;
 
 		byte[] padding = getRandomPadding(PADDING_MAX_NORMAL);
-		ByteBuffer write_buffer = ByteBuffer.allocate(VC.length + 4 + 2 + padding.length).order(ByteOrder.BIG_ENDIAN);
+		ByteBuffer writeBuffer = ByteBuffer.allocate(VC.length + 4 + 2 + padding.length).order(ByteOrder.BIG_ENDIAN);
 
-		write_buffer.put(writeCipher.update(VC));
-		write_buffer.put(writeCipher.update(new byte[] { 0, 0, 0, CRYPTO_RC4 }));
-		write_buffer.put(writeCipher.update(new byte[] { (byte) (padding.length >> 8), (byte) padding.length }));
-		if (write_buffer.remaining() != padding.length) {
+		writeBuffer.put(writeCipher.update(VC));
+		writeBuffer.put(writeCipher.update(new byte[] { 0, 0, 0, CRYPTO_RC4 }));
+		writeBuffer.put(writeCipher.update(new byte[] { (byte) (padding.length >> 8), (byte) padding.length }));
+		if (writeBuffer.remaining() != padding.length) {
 			throw new RuntimeException("not correct");
 		}
-		write_buffer.put(writeCipher.update(padding));
+		writeBuffer.put(writeCipher.update(padding));
 
-		write_buffer.flip();
+		writeBuffer.flip();
 
-		writer.write(write_buffer);
+		writer.write(writeBuffer);
 
 		return mseKeyPair;
 	}

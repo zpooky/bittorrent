@@ -19,22 +19,22 @@ public class Outbound extends PublicKeyBase {
 	}
 
 	public ReceivePublicKey sendPublicKey(Writer writer) throws Exception {
-		ByteBuffer write_buffer = send();
-		writer.write(write_buffer);
+		ByteBuffer writeBuffer = send();
+		writer.write(writeBuffer);
 
 		return new ReceivePublicKey(skey, publicKey, keyAgreement);
 	}
 
 	private ByteBuffer send() {
-		byte[] padding_a = getRandomPadding(PADDING_MAX / 2);
-		byte[] dh_public_key_bytes = publicKey.raw;
+		byte[] padding = getRandomPadding(PADDING_MAX / 2);
+		byte[] dhPublicKeyBytes = publicKey.raw;
 
-		ByteBuffer write_buffer = ByteBuffer.allocate(dh_public_key_bytes.length + padding_a.length);
-		write_buffer.put(dh_public_key_bytes);
-		write_buffer.put(padding_a);
+		ByteBuffer writeBuffer = ByteBuffer.allocate(dhPublicKeyBytes.length + padding.length);
+		writeBuffer.put(dhPublicKeyBytes);
+		writeBuffer.put(padding);
 
-		write_buffer.flip();
+		writeBuffer.flip();
 
-		return write_buffer;
+		return writeBuffer;
 	}
 }

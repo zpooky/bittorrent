@@ -54,23 +54,23 @@ public class ReceiveInfo extends Base {
 		SecretKeySpec a = a(secret, sharedSecret);
 		SecretKeySpec b = b(secret, sharedSecret);
 
-		TransportCipher read_cipher = new TransportCipher(Cipher.DECRYPT_MODE, outbound ? b : a);
-		int padding = padding(reader, read_cipher);
-		read_cipher.update(reader.requireExact(padding));
-		int initialLength = t(reader, read_cipher);
+		TransportCipher readCipher = new TransportCipher(Cipher.DECRYPT_MODE, outbound ? b : a);
+		int padding = padding(reader, readCipher);
+		readCipher.update(reader.requireExact(padding));
+		int initialLength = t(reader, readCipher);
 
-		consume(reader, initialLength, read_cipher);
+		consume(reader, initialLength, readCipher);
 
 		TransportCipher writeCipher = new TransportCipher(Cipher.ENCRYPT_MODE, outbound ? a : b);
-		return new Confirm(new MSEKeyPair(read_cipher, writeCipher));
+		return new Confirm(new MSEKeyPair(readCipher, writeCipher));
 	}
 
-	private void consume(Reader reader, int initialLength, TransportCipher read_cipher) throws Exception {
+	private void consume(Reader reader, int initialLength, TransportCipher readCipher) throws Exception {
 		if (initialLength > 0) {
 			ByteBuffer initialPayload = reader.read();
 			System.out.println("read: " + initialPayload.remaining() + "|expected: " + initialLength);
 			ByteBuffer out = ByteBuffer.allocate(initialPayload.remaining()).order(ByteOrder.BIG_ENDIAN);
-			read_cipher.update(initialPayload, out);
+			readCipher.update(initialPayload, out);
 			System.out.println("out: '" + new String(out.array(), UTF8) + "'");
 		}
 	}
@@ -101,27 +101,23 @@ public class ReceiveInfo extends Base {
 		return new SharedSecret(decode);
 	}
 
-	private int padding(Reader reader, TransportCipher read_cipher) throws Exception {
+	private int padding(Reader reader, TransportCipher readCipher) throws Exception {
 		// find SKEY using HASH('req2', SKEY)^HASH('req3', S) ,
 		// ENCRYPT(VC, crypto_provide, len(PadC),
 		final int INT = VC.length + 4 + 2;
 		byte[] crypted = new byte[INT];
 		reader.require(crypted);
 
-		byte[] plain = read_cipher.update(crypted);
+		byte[] plain = readCipher.update(crypted);
 
 		System.out.println("crypted:" + Arrays.toString(crypted) + "|plain:" + Arrays.toString(plain));
 		byte other_supported_protocols = plain[VC.length + 3];
 
-		byte remoteSelectedProtocol;
-
 		if ((other_supported_protocols & CRYPTO_RC4) != 0) {
-
-			remoteSelectedProtocol = CRYPTO_RC4;
 
 		} else {
 
-			throw new IOException("No crypto protocol in common remote= " + other_supported_protocols);
+			throw new RuntimeException("Not rc4 " + other_supported_protocols);
 
 		}
 
@@ -137,17 +133,17 @@ public class ReceiveInfo extends Base {
 		return padding;
 	}
 
-	private int t(Reader reader, TransportCipher read_cipher) throws Exception {
+	private int t(Reader reader, TransportCipher readCipher) throws Exception {
 		// ENCRYPT( len(IA)), { ENCRYPT(IA) }
 
-		ByteBuffer data = read_cipher.update(reader.requireExact(2));
+		ByteBuffer data = readCipher.update(reader.requireExact(2));
 		int ia_len = data.getShort() & 0xFFFF;
 
 		System.out.println(Arrays.toString(data.array()) + "|data: " + ia_len);
 
 		if (ia_len > 65535 || ia_len < 0) {
 
-			throw (new IOException("Invalid IA length '" + ia_len + "'"));
+			throw new RuntimeException("Invalid IA length '" + ia_len + "'");
 		}
 
 		if (ia_len >= 0) {

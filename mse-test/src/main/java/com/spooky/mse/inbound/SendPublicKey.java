@@ -3,8 +3,6 @@ package com.spooky.mse.inbound;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import javax.crypto.KeyAgreement;
-
 import com.spooky.mse.Base;
 import com.spooky.mse.io.Writer;
 import com.spooky.mse.o.LocalPublicKey;
@@ -17,14 +15,12 @@ public class SendPublicKey extends Base {
 
 	private final SKey skey;
 	private final LocalPublicKey publicKey;
-	private final KeyAgreement keyAgreement;
 	private final RemotePublicKey remotePublicKey;
 	private final SecretKey secret;
 
-	public SendPublicKey(SKey skey, LocalPublicKey publicKey, KeyAgreement keyAgreement, RemotePublicKey remotePublicKey, SecretKey secret) {
+	public SendPublicKey(SKey skey, LocalPublicKey publicKey, RemotePublicKey remotePublicKey, SecretKey secret) {
 		this.skey = skey;
 		this.publicKey = publicKey;
-		this.keyAgreement = keyAgreement;
 		this.remotePublicKey = remotePublicKey;
 		this.secret = secret;
 	}

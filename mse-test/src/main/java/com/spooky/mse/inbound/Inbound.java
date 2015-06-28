@@ -27,7 +27,7 @@ public class Inbound extends PublicKeyBase {
 
 		RemotePublicKey remotePublicKey = result._1;
 		SecretKey secret = result._2;
-		return new SendPublicKey(skey, publicKey, keyAgreement, remotePublicKey, secret);
+		return new SendPublicKey(skey, publicKey, remotePublicKey, secret);
 	}
 
 }
