@@ -69,6 +69,13 @@ public class TransportCipher {
 		return (result);
 	}
 
+	public ByteBuffer update(ByteBuffer source) {
+		ByteBuffer target = ByteBuffer.allocate(source.remaining());
+		update(source, target);
+		target.flip();
+		return target;
+	}
+
 	public void update(ByteBuffer source_buffer, ByteBuffer target_buffer) {
 		try {
 			// TODO: 1.5 supports update( ByteBuffer, ByteBuffer )

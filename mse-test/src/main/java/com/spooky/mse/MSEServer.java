@@ -20,7 +20,13 @@ public class MSEServer extends ExchangeBase {
 					try (SocketChannel s = ss.accept()) {
 						Reader reader = r(s);
 						Writer writer = w(s);
-						MSEKeyPair keyPair = new Inbound(SKey.fromHex("597f6a218a58b0fe7880ba12466ccd89ca6c778f")).publicKey(reader).sendPublicKey(writer).complete(reader);
+						MSEKeyPair keyPair = //
+						new Inbound(SKey.fromHex("597f6a218a58b0fe7880ba12466ccd89ca6c778f"))//
+								.publicKey(reader)//
+								.sendPublicKey(writer)//
+								.complete(reader)//
+								.confirm(writer)//
+								.debug(reader);
 					}
 				} catch (Exception e) {
 					e.printStackTrace();

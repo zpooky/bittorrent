@@ -37,7 +37,7 @@ public class ReceiveInfo extends Base {
 		this.secret = secret;
 	}
 
-	public MSEKeyPair complete(Reader reader) throws Exception {
+	public Confirm complete(Reader reader) throws Exception {
 		// B receives: HASH('req1', S), HASH('req2', SKEY)^HASH('req3', S),
 		// ENCRYPT(VC, crypto_provide, len(PadC), PadC, len(IA)),
 		// ENCRYPT(IA)
@@ -58,10 +58,10 @@ public class ReceiveInfo extends Base {
 		reader.requireExact(padding);
 		int initialLength = t(reader, read_cipher);
 
-		consume(reader, initialLength, read_cipher);
+		// consume(reader, initialLength, read_cipher);
 
 		TransportCipher writeCipher = new TransportCipher(Cipher.ENCRYPT_MODE, outbound ? a : b);
-		return new MSEKeyPair(read_cipher, writeCipher);
+		return new Confirm(new MSEKeyPair(read_cipher, writeCipher));
 	}
 
 	private void consume(Reader reader, int initialLength, TransportCipher read_cipher) throws Exception {
@@ -136,13 +136,11 @@ public class ReceiveInfo extends Base {
 
 	private int t(Reader reader, TransportCipher read_cipher) throws Exception {
 		// ENCRYPT( len(IA)), { ENCRYPT(IA) }
-		byte[] data = new byte[2];
-		reader.require(data);
 
-		data = read_cipher.update(data);
+		ByteBuffer data = read_cipher.update(reader.requireExact(2));
+		int ia_len = data.getShort() & 0xFFFF;
 
-		int ia_len = 0xffff & (((data[data.length - 2] & 0xff) << 8) + (data[data.length - 1] & 0xff));
-		System.out.println(Arrays.toString(data) + "|data: " + ia_len);
+		System.out.println(Arrays.toString(data.array()) + "|data: " + ia_len);
 
 		if (ia_len > 65535 || ia_len < 0) {
 
@@ -158,7 +156,7 @@ public class ReceiveInfo extends Base {
 			// read_buffer = null;
 			//
 			// continue;
-			throw new RuntimeException(".");
+			throw new RuntimeException("." + ia_len);
 		}
 
 	}
