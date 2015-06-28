@@ -19,12 +19,8 @@ public class MSEKeyPair extends Base {
 	public MSEKeyPair debug(Reader reader) throws Exception {
 		ByteBuffer buffer = reader.requireAtleast(1);
 		ByteBuffer decoded = readCipher.update(buffer.duplicate());
-		System.out.println(decoded);
 		System.out.print("decoded: ");
 		print(decoded);
-		System.out.print("not: ");
-		print(buffer);
-		// System.out.println(new String(decoded.array(), UTF8));
 		return this;
 	}
 

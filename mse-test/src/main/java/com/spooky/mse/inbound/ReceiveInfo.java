@@ -22,6 +22,7 @@ import com.spooky.mse.o.SecretKey;
 import com.spooky.mse.o.SharedSecret;
 import com.spooky.mse.u.TransportCipher;
 
+//ProtocolDecoderPHE
 public class ReceiveInfo extends Base {
 
 	private final SKey skey;
@@ -55,21 +56,23 @@ public class ReceiveInfo extends Base {
 
 		TransportCipher read_cipher = new TransportCipher(Cipher.DECRYPT_MODE, outbound ? b : a);
 		int padding = padding(reader, read_cipher);
-		reader.requireExact(padding);
+		read_cipher.update(reader.requireExact(padding));
 		int initialLength = t(reader, read_cipher);
 
-		// consume(reader, initialLength, read_cipher);
+		consume(reader, initialLength, read_cipher);
 
 		TransportCipher writeCipher = new TransportCipher(Cipher.ENCRYPT_MODE, outbound ? a : b);
 		return new Confirm(new MSEKeyPair(read_cipher, writeCipher));
 	}
 
 	private void consume(Reader reader, int initialLength, TransportCipher read_cipher) throws Exception {
-		ByteBuffer initialPayload = reader.read();
-		System.out.println("read: " + initialPayload.remaining() + "|expected: " + initialLength);
-		ByteBuffer out = ByteBuffer.allocate(initialPayload.remaining()).order(ByteOrder.BIG_ENDIAN);
-		read_cipher.update(initialPayload, out);
-		System.out.println("out: '" + new String(out.array(), UTF8) + "'");
+		if (initialLength > 0) {
+			ByteBuffer initialPayload = reader.read();
+			System.out.println("read: " + initialPayload.remaining() + "|expected: " + initialLength);
+			ByteBuffer out = ByteBuffer.allocate(initialPayload.remaining()).order(ByteOrder.BIG_ENDIAN);
+			read_cipher.update(initialPayload, out);
+			System.out.println("out: '" + new String(out.array(), UTF8) + "'");
+		}
 	}
 
 	private boolean compareSecret(ByteBuffer readBuffer) throws NoSuchAlgorithmException {

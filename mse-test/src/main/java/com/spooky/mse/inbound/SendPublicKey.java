@@ -12,6 +12,7 @@ import com.spooky.mse.o.RemotePublicKey;
 import com.spooky.mse.o.SKey;
 import com.spooky.mse.o.SecretKey;
 
+//ProtocolDecoderPHE
 public class SendPublicKey extends Base {
 
 	private final SKey skey;
