@@ -33,20 +33,22 @@ object BittorrentClient {
     //    Thread.sleep(5000)
     //    System.exit(0)
 
+    val s = "file:\\C:\\Users\\spooky\\AppData\\Local\\capsule\\apps\\com.spooky.bittorrent.BittorrentClient\\com.spooky.bittorrent-core-1.0-SNAPSHOT.jar!\\debian.torrent"
+    println("---"+s.replaceAllLiterally("file:\\", ""))
   }
 
   def debian() = {
-    println(BittorrentClient.getClass.getResource("/debian.torrent").toURI)
-    val file = new File(BittorrentClient.getClass.getResource("/debian.torrent").getFile)
+    val fileString = BittorrentClient.getClass.getResource("/debian.torrent").getFile
+    val file = new File(fileString.replaceAllLiterally("file:\\", "").replaceAllLiterally("file:/", ""))
     println(file)
     val torrent = Torrents(file)
-    println("infoHash:" + torrent.infoHash)
+    println(s"${file.getName}-infoHash: ${torrent.infoHash}")
     TorrentSetup(torrent, Paths.get("P:\\tmp\\t"))
   }
   def random() = {
     val file = new File("O:\\tmp\\file.dump.torrent")
     val torrent = Torrents(file)
-    println("infoHash:" + torrent.infoHash)
+    println(s"${file.getName}-infoHash:" + torrent.infoHash)
     TorrentSetup(torrent, Paths.get("O:\\tmp\\"))
   }
 

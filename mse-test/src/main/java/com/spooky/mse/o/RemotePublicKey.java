@@ -6,10 +6,11 @@ public class RemotePublicKey extends ArrayWrapper {
 
 	public RemotePublicKey(byte[] raw) {
 		super(raw);
+		System.out.println(this);
 	}
 
 	public RemotePublicKey(PublicKey pk) {
-		super(pk.getEncoded());
+		this(pk.getEncoded());
 	}
 
 }

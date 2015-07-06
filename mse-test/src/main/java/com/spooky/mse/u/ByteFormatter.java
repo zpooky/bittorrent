@@ -86,7 +86,7 @@ public class ByteFormatter {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
+		System.out.println("other public: " + new String(out));
 		try {
 			return new String(out) + (data.length > max_length ? "..." : "");
 		} catch (Exception e) {

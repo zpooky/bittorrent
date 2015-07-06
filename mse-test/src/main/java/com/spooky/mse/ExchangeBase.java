@@ -37,11 +37,13 @@ public class ExchangeBase {
 			@Override
 			public ByteBuffer requireAtleast(int amount) throws Exception {
 				ByteBuffer bb = ByteBuffer.allocate(amount + (8 * 1024)).order(ByteOrder.BIG_ENDIAN);
-				while (bb.position() <= amount) {
+				s.configureBlocking(true);
+				while (bb.position() < amount) {
 					int read = s.read(bb);
 					if (read == -1) {
 						throw new Exception("-1");
 					}
+					System.out.println(bb);
 
 				}
 				bb.flip();
@@ -52,6 +54,7 @@ public class ExchangeBase {
 			public void require(ByteBuffer bb) throws Exception {
 				while (bb.hasRemaining()) {
 					int read = s.read(bb);
+
 					if (read == -1) {
 						throw new Exception("-1");
 					}

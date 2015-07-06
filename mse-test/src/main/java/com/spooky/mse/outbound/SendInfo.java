@@ -14,7 +14,6 @@ import com.spooky.mse.o.MSEKeyPair;
 import com.spooky.mse.o.RemotePublicKey;
 import com.spooky.mse.o.SKey;
 import com.spooky.mse.o.SecretKey;
-import com.spooky.mse.o.SharedSecret;
 import com.spooky.mse.u.TransportCipher;
 
 public class SendInfo extends Base {
@@ -90,10 +89,9 @@ public class SendInfo extends Base {
 		}
 
 		// SharedSecret sharedSecret = new SharedSecret(skey.raw);
-		SharedSecret sharedSecret = SharedSecret.fromHex("597f6a218a58b0fe7880ba12466ccd89ca6c778f");
-		System.out.println(sharedSecret);
-		SecretKeySpec a = a(secretKey, sharedSecret);
-		SecretKeySpec b = b(secretKey, sharedSecret);
+		// SharedSecret sharedSecret = SharedSecret.fromHex("597f6a218a58b0fe7880ba12466ccd89ca6c778f");
+		SecretKeySpec a = a(secretKey, skey);
+		SecretKeySpec b = b(secretKey, skey);
 
 		TransportCipher write_cipher = new TransportCipher(Cipher.ENCRYPT_MODE, outbound ? a : b);
 		TransportCipher read_cipher = new TransportCipher(Cipher.DECRYPT_MODE, outbound ? b : a);

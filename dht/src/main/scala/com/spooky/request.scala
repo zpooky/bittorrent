@@ -85,7 +85,7 @@ object DHT {
     override def toString: String = Hex.encodeHexString(id)
   }
   object IdArgument {
-    def apply(infoHash: InfoHash): IdArgument = IdArgument(infoHash.sum)
+    def apply(infoHash: InfoHash): IdArgument = IdArgument(infoHash.raw)
   }
 
   //{"t":"aa", "y":"q", "q":"ping", "a":{"id":"abcdefghij0123456789"}}

@@ -52,13 +52,13 @@ sealed case class PublicKey(override val raw: Array[Byte]) extends RawWrapper(ra
   }
 
   def raw(buffer: ByteBuffer): PublicKey = {
-    assert(buffer.remaining() >= 96)
+    assert(buffer.remaining >= 96)
     println("PublicKey.raw("+buffer+")")
     val raw = new Array[Byte](96)
     buffer.get(raw)
     PublicKey(raw)
   }
-  
+
   def hex(hex:String): PublicKey = {
     assert(hex.length >= (96*2))
     val decoded = Hex.decodeHex(hex.toCharArray())

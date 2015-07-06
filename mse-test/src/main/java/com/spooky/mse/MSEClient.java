@@ -18,7 +18,7 @@ import com.spooky.mse.outbound.Outbound;
 
 public class MSEClient extends ExchangeBase {
 	public static void main(String[] args) throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, IllegalStateException, InvalidAlgorithmParameterException, DecoderException, Exception {
-		SocketAddress local = new InetSocketAddress("localhost", _24444);
+		SocketAddress local = new InetSocketAddress("localhost", 25555);
 		try (SocketChannel channel = SocketChannel.open(local)) {
 			Reader r = r(channel);
 			Writer w = w(channel);

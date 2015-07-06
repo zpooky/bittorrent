@@ -13,7 +13,7 @@ import com.spooky.mse.o.SKey;
 
 public class MSEServer extends ExchangeBase {
 	public static void main(String[] args) throws Exception {
-		SocketAddress local = new InetSocketAddress("localhost", _24444);
+		SocketAddress local = new InetSocketAddress("localhost", 25555);
 		try (ServerSocketChannel ss = ServerSocketChannel.open().bind(local)) {
 			while (true) {
 				try {

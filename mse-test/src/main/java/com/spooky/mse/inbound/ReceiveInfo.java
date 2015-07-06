@@ -49,10 +49,10 @@ public class ReceiveInfo extends Base {
 
 		/* SharedSecret sharedSecret = */sharedSecret(reader);
 		// SharedSecret sharedSecret = new SharedSecret(skey.raw);
-		SharedSecret sharedSecret = SharedSecret.fromHex("597f6a218a58b0fe7880ba12466ccd89ca6c778f");
-		System.out.println(sharedSecret);
-		SecretKeySpec a = a(secret, sharedSecret);
-		SecretKeySpec b = b(secret, sharedSecret);
+		// SharedSecret sharedSecret = SharedSecret.fromHex("597f6a218a58b0fe7880ba12466ccd89ca6c778f");
+		// System.out.println(sharedSecret);
+		SecretKeySpec a = a(secret, skey);
+		SecretKeySpec b = b(secret, skey);
 
 		TransportCipher readCipher = new TransportCipher(Cipher.DECRYPT_MODE, outbound ? b : a);
 		int padding = padding(reader, readCipher);

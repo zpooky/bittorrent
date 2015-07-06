@@ -7,7 +7,6 @@ import scala.annotation.tailrec
 import org.apache.commons.codec.binary.Hex
 import com.spooky.bittorrent.mse.SharedSecretKey
 
-
 sealed case class Sha1(raw: Array[Byte]) {
   override def toString: String = Hex.encodeHexString(raw)
   override def equals(o: Any): Boolean = o match {
@@ -27,6 +26,8 @@ sealed case class Sha1(raw: Array[Byte]) {
     val result = new Array[Byte](raw.length)
     rec(raw, o.raw, result, 0)
   }
+  def apply(index: Int): Byte = raw(index)
+  def length: Int = 20 //raw.length
 }
 
 object Sha1 extends Algorithm(20) {
@@ -37,12 +38,29 @@ object Sha1 extends Algorithm(20) {
   //      Sha1(raw)
   //    }
   def from(str: String, key: SharedSecretKey): Sha1 = from(str.getBytes(UTF8), key.raw)
-  def from(str: String, key: InfoHash): Sha1 = from(str.getBytes(UTF8), key.sum)
-  def from(r1: Array[Byte], r2: Array[Byte]): Sha1 = {
+  def from(str: String, key: InfoHash): Sha1 = from(str.getBytes(UTF8), key.raw)
+  def from(bb: Array[Byte]*): Sha1 = {
     val digest = MessageDigest.getInstance("sha1")
-    digest.update(r1)
-    Sha1(digest.digest(r2))
+    for (c <- bb) {
+      digest.update(c)
+    }
+    Sha1(digest.digest())
   }
+  //  def from(bb: Array[Byte]): Sha1 = {
+  //    val digest = MessageDigest.getInstance("sha1")
+  //    Sha1(digest.digest(bb))
+  //  }
+  //  def from(bb1: Array[Byte], bb2: Array[Byte]): Sha1 = {
+  //    val digest = MessageDigest.getInstance("sha1")
+  //    digest.update(bb1)
+  //    Sha1(digest.digest(bb2))
+  //  }
+  //  def from(bb1: Array[Byte], bb2: Array[Byte], bb3: Array[Byte]): Sha1 = {
+  //	  val digest = MessageDigest.getInstance("sha1")
+  //			  digest.update(bb1)
+  //			  digest.update(bb2)
+  //			  Sha1(digest.digest(bb3))
+  //  }
   def raw(buffer: ByteBuffer): Sha1 = {
     val r = Array.ofDim[Byte](20)
     buffer.get(r)

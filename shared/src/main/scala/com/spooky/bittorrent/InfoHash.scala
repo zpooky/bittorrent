@@ -5,11 +5,11 @@ import java.util.Arrays
 import java.security.MessageDigest
 import java.nio.ByteBuffer
 
-sealed case class InfoHash(sum: Array[Byte]) {
-  override def toString: String = Hex.encodeHexString(sum)
-  override def hashCode: Int = Arrays.hashCode(sum)
+sealed case class InfoHash(raw: Array[Byte]) {
+  override def toString: String = Hex.encodeHexString(raw)
+  override def hashCode: Int = Arrays.hashCode(raw)
   override def equals(o: Any): Boolean = o match {
-    case InfoHash(otherHash) => MessageDigest.isEqual(otherHash, sum)
+    case InfoHash(otherHash) => MessageDigest.isEqual(otherHash, raw)
     case _                   => false
   }
 }

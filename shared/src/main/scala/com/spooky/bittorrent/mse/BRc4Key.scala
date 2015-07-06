@@ -9,7 +9,7 @@ object BRc4Key extends Base {
     val digest = MessageDigest.getInstance("sha1")
     digest.update("keyB".getBytes(UTF8))
     digest.update(shared.raw)
-    digest.update(skey.sum)
+    digest.update(skey.raw)
     BRc4Key(digest.digest())
   }
 }

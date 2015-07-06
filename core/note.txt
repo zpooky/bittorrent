@@ -22,3 +22,8 @@ https://tersesystems.com/2014/08/19/exposing-akka-actor-state-with-jmx/
 -server
 
 -XX:+UseCompressedOops
+
+
+
+
+= COConfigurationManager.getIntParameter( "network.tcp.socket.SO_RCVBUF" );

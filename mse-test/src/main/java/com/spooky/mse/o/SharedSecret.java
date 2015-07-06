@@ -7,6 +7,7 @@ public class SharedSecret extends ArrayWrapper {
 
 	public SharedSecret(byte[] raw) {
 		super(raw);
+		System.out.println(this);
 	}
 
 	public static SharedSecret fromHex(String hex) throws DecoderException {

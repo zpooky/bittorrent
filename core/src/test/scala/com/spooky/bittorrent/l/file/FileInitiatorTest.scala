@@ -14,12 +14,12 @@ import com.spooky.bittorrent.metainfo.Torrents
 
 class FileInitiatorTest extends FunSuite {
   private def getMultiFileTorrent = {
-    val file = new File(getClass.getResource("/helix.torrent").toURI)
+    val file = new File(getClass.getResource("/helix.torrent").getFile)
 //    val file = new File(getClass.getResource("/the.game.torrent").toURI)
     Torrents(file)
   }
   private def getSingleFileTorrent = {
-    val file = new File(getClass.getResource("/debian.torrent").toURI)
+    val file = new File(getClass.getResource("/debian.torrent").getFile)
     Torrents(file)
   }
   private def getRoot: String = {

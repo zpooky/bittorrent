@@ -22,7 +22,7 @@ class TCPServer(handlerProps: HandlerProps) extends Actor {
     }
 
     case Tcp.Connected(remote, local) =>
-      val handler = context.actorOf(handlerProps.props(remote, sender))
+      val handler = context.actorOf(handlerProps.props(remote, sender()))
       sender ! Tcp.Register(handler, keepOpenOnPeerClosed = false, useResumeWriting = false)
   }
 

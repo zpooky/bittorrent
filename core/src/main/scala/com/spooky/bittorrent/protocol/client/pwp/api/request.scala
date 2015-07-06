@@ -14,6 +14,7 @@ import com.spooky.bittorrent.Sha1
 import scala.annotation.tailrec
 import com.spooky.bittorrent.InfoHash
 import com.spooky.bittorrent.Showable
+import org.apache.commons.codec.binary.Hex
 
 abstract class PeerWireMessage
 case class Handshake(infoHash: InfoHash, peerId: PeerId) extends PeerWireMessage with Showable {
@@ -23,7 +24,7 @@ case class Handshake(infoHash: InfoHash, peerId: PeerId) extends PeerWireMessage
     val ascii = Charset.forName("ASCII")
     buffer.put("BitTorrent protocol".getBytes(ascii))
     buffer.putLong(0)
-    buffer.put(infoHash.sum)
+    buffer.put(infoHash.raw)
     buffer.put(peerId.id.getBytes(ascii))
     buffer.flip().asInstanceOf[ByteBuffer]
   }
@@ -35,7 +36,7 @@ case class Handshake(infoHash: InfoHash, peerId: PeerId) extends PeerWireMessage
 }
 object Handshake {
   def parse(buffer: ByteBuffer): Handshake = {
-    //    debug(buffer.duplicate())
+    debug(buffer.duplicate())
     val length = buffer.get.asInstanceOf[Int] & 0xFF
     val p = read(buffer, length)
     val reserved = buffer.getLong
@@ -45,10 +46,15 @@ object Handshake {
     Handshake(infoHash, peerId)
   }
   private def debug(buffer: ByteBuffer) {
-    buffer.order(ByteOrder.BIG_ENDIAN)
-    val length = buffer.get.asInstanceOf[Int] & 0xFF
-    println("pstrlen:" + length + "|pstr:" + read(buffer, length) + "|reserved:" + Binary.toBinary(buffer.getLong) + "|info_has:" + read(buffer, 20) + "|peer-id:" + read(buffer, 20))
-    //    println(Binary.toBinary(length) + "|" + length + "|" + Binary.toBinary(length))
+    try {
+      println("debug: " + buffer)
+      buffer.order(ByteOrder.BIG_ENDIAN)
+      val length = buffer.get.asInstanceOf[Int] & 0xFF
+      println("pstrlen:" + length + "|pstr:" + read(buffer, length) + "|reserved:" + buffer.getLong + "|info_hash:" + h(buffer, 20) + "|peer-id:" + read(buffer, 20))
+      //    println(Binary.toBinary(length) + "|" + length + "|" + Binary.toBinary(length))
+    } catch {
+      case e: Exception => e.printStackTrace()
+    }
   }
   private def read(buffer: ByteBuffer, length: Int): String = {
     val builder = StringBuilder.newBuilder
@@ -56,6 +62,11 @@ object Handshake {
       builder.append(buffer.get.asInstanceOf[Char])
     }
     builder.toString
+  }
+  private def h(buffer: ByteBuffer, length: Int): String = {
+    val r = Array.ofDim[Byte](length)
+    buffer.get(r)
+    Hex.encodeHexString(r)
   }
 }
 object PeerWireMessage {

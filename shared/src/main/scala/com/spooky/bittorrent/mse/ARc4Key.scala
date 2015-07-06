@@ -9,7 +9,7 @@ object ARc4Key extends Base {
     val digest = MessageDigest.getInstance("sha1")
     digest.update("keyA".getBytes(UTF8))
     digest.update(shared.raw)
-    digest.update(skey.sum)
+    digest.update(skey.raw)
     ARc4Key(digest.digest())
   }
 }

@@ -7,14 +7,14 @@ import akka.actor.ActorRef
 import akka.io.Tcp.Write
 import akka.io.Tcp.CommandFailed
 import akka.io.Tcp
-import com.spooky.bittorrent.protocol.client.pwp.actor.SimpleLog
 import com.spooky.bittorrent.l.session.client.ClientSession
 import com.spooky.bittorrent.Showable
+import akka.event.Logging
 
 case class Ack(sequence: Int, t: Thing) extends Event
 abstract class BufferingRetry(connection: ActorRef, session: ClientSession) extends Actor {
 
-  private val log = new SimpleLog //Logging(context.system, this)
+  private val log = Logging(context.system, this)
   private val chokePredictor = new ChokePredictor(Byte(65536), /*Size(2, MegaByte), */ session) //TODO find out a way to get buffer size
 
   private def ordering = new Ordering[Tuple2[ByteString, Ack]] {

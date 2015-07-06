@@ -116,15 +116,15 @@ object Torrents {
 
   def main(args: Array[String]): Unit = {
     val url = getClass.getResource("/debian.torrent")
-    val file = new File(url.toURI())
+    val file = new File(url.getFile)
     val t = Torrents(new File("D:\\torrent\\Community.S05E01.HDTV.x264-LOL.mp4.torrent"))
     //    println(Base64.getEncoder.encodeToString(t.infoHash.sum))
     println("%40%CA%3F%3E%28%EA_%89%F3%29qv%D7%813%08R%9E%12%1A")
     val codec = new URLCodec
-    println(new String(codec.encode(t.infoHash.sum), Charset.forName("ASCII")))
-    println(codec.encode(new String(t.infoHash.sum, Charset.forName("UTF8"))))
-    println(codec.encode(new String(t.infoHash.sum, Charset.forName("ASCII"))))
-    println(codec.encode(new String(t.infoHash.sum, Charset.forName("UTF16"))))
+    println(new String(codec.encode(t.infoHash.raw), Charset.forName("ASCII")))
+    println(codec.encode(new String(t.infoHash.raw, Charset.forName("UTF8"))))
+    println(codec.encode(new String(t.infoHash.raw, Charset.forName("ASCII"))))
+    println(codec.encode(new String(t.infoHash.raw, Charset.forName("UTF16"))))
     //    new File("D:\\torrent\\").listFiles().filter { x => x.isFile() }.filter { x => x.getName.endsWith(".torrent") }.foreach { x => Torrent(x) }
   }
 }

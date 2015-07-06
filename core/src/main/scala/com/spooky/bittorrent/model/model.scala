@@ -12,11 +12,12 @@ import com.spooky.bittorrent.InfoHash
 
 case class PeerId(id: String)
 object PeerId {
+  val UTF8 = Charset.forName("UTF8")
   def parse(buffer: ByteBuffer): PeerId = {
     val buff = Array.ofDim[Byte](20)
     buffer.get(buff)
-    val charset = Charset.forName("ASCII")
-    PeerId(new String(buff, charset).intern())
+    //    val charset = Charset.forName("ASCII")
+    PeerId(new String(buff, UTF8).intern())
   }
   def create = PeerId("SPOOKY6-c2b4f6c4h4d9")
 }

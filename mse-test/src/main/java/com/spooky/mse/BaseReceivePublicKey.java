@@ -24,6 +24,7 @@ public class BaseReceivePublicKey extends Base {
 	public Tuple<RemotePublicKey, SecretKey> parse(ByteBuffer require) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, IllegalStateException {
 		byte[] buffer = require.array();
 		BigInteger other_dh_y = bytesToBigInteger(buffer, 0, DH_SIZE_BYTES);
+		System.out.println("DH_SIZE_BYTES: " + DH_SIZE_BYTES);
 
 		KeyFactory dh_key_factory = KeyFactory.getInstance("DH");
 
@@ -33,6 +34,7 @@ public class BaseReceivePublicKey extends Base {
 		keyAgreement.doPhase(otherPublicKey, true);
 
 		SecretKey secret = new SecretKey(keyAgreement.generateSecret());
+
 		return new Tuple<>(remotePublicKey, secret);
 	}
 }

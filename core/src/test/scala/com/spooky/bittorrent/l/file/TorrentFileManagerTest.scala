@@ -12,7 +12,7 @@ import com.spooky.bittorrent.metainfo.Torrents
 import com.spooky.bittorrent.Sha1
 
 class TorrentFileManager_SingleFileTest extends FunSuite {
-  val file = new File(TorrentFileManager.getClass.getResource("/debian.torrent").toURI)
+  val file = new File(TorrentFileManager.getClass.getResource("/debian.torrent").getFile)
   val torrent = Torrents(file)
   val root = Paths.get("P:\\tmp\\t")
   lazy val stat = new FileInitiator2(torrent, root).state()

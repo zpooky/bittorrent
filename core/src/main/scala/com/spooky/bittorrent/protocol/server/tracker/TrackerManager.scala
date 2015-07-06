@@ -53,7 +53,7 @@ class TrackerManager(tracker: Tracker)(implicit context: ExecutionContext, actor
     val codec = new URLCodec
     val ascii = Charset.forName("ASCII")
 //    val encoder = Base64.getEncoder()
-    val infoHash = new String(codec.encode(statistics.infoHash.sum), ascii)
+    val infoHash = new String(codec.encode(statistics.infoHash.raw), ascii)
     val peerId = id.id
     val key = "ss"
     val port = 6881
