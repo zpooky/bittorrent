@@ -46,9 +46,14 @@ object CryptoProviders {
 }
 abstract sealed class CryptoProvider {
   override def toString = getClass.getSimpleName.replaceAllLiterally("$", "")
+  def id: Byte
 }
-final object RC4 extends CryptoProvider
-final object Plain extends CryptoProvider
+final object RC4 extends CryptoProvider {
+  def id = 0x02
+}
+final object Plain extends CryptoProvider {
+  def id = 0x01
+}
 
 object RemotePublicKey {
   def apply(publicKey: java.security.PublicKey): RemotePublicKey = RemotePublicKey(publicKey.getEncoded)

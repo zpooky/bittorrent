@@ -18,12 +18,13 @@ import com.spooky.bittorrent.ImmutableByteBuffer
 import akka.event.Logging
 import akka.actor.ActorRef
 import akka.actor.Props
+import com.spooky.cipher.MSEKeyPair
 
 object PeerWireProtocolMessageActor {
-  def props(session: Session, connection: ActorRef, handshake: Handshake): Props = Props(classOf[PeerWireProtocolMessageActor], session, connection, handshake.peerId)
+  def props(session: Session, connection: ActorRef, handshake: Handshake, keyPair: MSEKeyPair): Props = Props(classOf[PeerWireProtocolMessageActor], session, connection, handshake.peerId, keyPair)
 }
 
-class PeerWireProtocolMessageActor(session: Session, connection: ActorRef, peerId: PeerId) extends BufferingRetry(connection, new ClientSession(connection)) { //TODO central session
+class PeerWireProtocolMessageActor(session: Session, connection: ActorRef, peerId: PeerId, keyPair: MSEKeyPair) extends BufferingRetry(connection, new ClientSession(connection), keyPair) { //TODO central session
 
   private val log = Logging(context.system, this)
   private val fileManager = session.fileManager

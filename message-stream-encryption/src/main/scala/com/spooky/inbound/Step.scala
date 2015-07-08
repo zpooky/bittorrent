@@ -3,7 +3,7 @@ package com.spooky.inbound
 import akka.util.ByteString
 
 trait InStep {
-  def step(in: ByteString, reply: Reply): OutStep
+  def step(in: ByteString): OutStep
 }
 
 trait OutStep {

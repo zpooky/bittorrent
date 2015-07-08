@@ -24,9 +24,5 @@ object SessionManager {
       TorrentRef(torrent, peerId)
     }
   }
-
-  //TODO
-  def test: InfoHash = {
-    sessions.keys().find {_ => true } get
-  }
+  def infoHashes: List[InfoHash] = sessions.keys().toList
 }

@@ -43,7 +43,7 @@ class RequestTest extends FunSuite {
   }
   test("Handshake") {
     val message = Handshake(getChecksum, getByteId)
-    assert(message == Handshake.parse(message.toByteBuffer))
+    assert(message == Handshake.parse(message.toByteString))
   }
   test("Choke") {
     PeerWireMessage(Choke.toByteBuffer) match {

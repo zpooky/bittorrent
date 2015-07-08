@@ -37,4 +37,8 @@ private[cipher] abstract class RC4Cipher(key: SecretKeySpec, forEncryption: Bool
     FakeBStrings(result)
   }
 
+  def update(bb: ByteString): ByteString = {
+    FakeBStrings(update(bb.toArray))
+  }
+
 }

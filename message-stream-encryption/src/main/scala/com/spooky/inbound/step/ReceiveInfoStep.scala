@@ -21,32 +21,33 @@ import java.nio.ByteOrder
 import org.apache.commons.codec.binary.Hex
 import com.spooky.inbound.CryptoProviders
 import com.spooky.inbound.CryptoProvider
-import com.spooky.cipher.WriteRC4Cipher
-import com.spooky.cipher.ReadRC4Cipher
+import com.spooky.cipher.RC4WriteCipher
+import com.spooky.cipher.RC4ReadCipher
 
-class ReceiveInfoStep(skey: InfoHash, publicKey: LocalPublicKey, remotePublicKey: RemotePublicKey, secretKey: SecretKey) extends Base with InStep {
-  def step(in: ByteString, reply: Reply): ConfirmStep = {
+class ReceiveInfoStep(infoHashes: List[InfoHash], publicKey: LocalPublicKey, remotePublicKey: RemotePublicKey, secretKey: SecretKey) extends Base with InStep {
+  def step(in: ByteString): ConfirmStep = {
     // B receives: HASH('req1', S), HASH('req2', SKEY)^HASH('req3', S),
     // ENCRYPT(VC, crypto_provide, len(PadC), PadC, len(IA)),
     // ENCRYPT(IA)
 
-    //itterate over skeys (2) to find the correct
-
     val readBuffer = in.toByteBuffer.order(ByteOrder.BIG_ENDIAN)
-    println(readBuffer)
+    println(s"readBuffer: $readBuffer")
 
     if (!compareSecret(readBuffer)) {
-      println(readBuffer)
       throw new RuntimeException("Not matching secret")
     }
+    println(s"readBuffer: $readBuffer")
 
-    sharedSecret(Sha1.raw(readBuffer))
+    val skey: SKey = determineCorrectSKey(Sha1.raw(readBuffer)).orNull
+    if (skey == null) {
+      throw new RuntimeException("No matching SKEY(InfoHash)")
+    }
 
-    val aKey = a(secretKey, skey);
-    val bKey = b(secretKey, skey);
+    val aKey = a(secretKey, skey)
+    val bKey = b(secretKey, skey)
 
-    val readCipher: ReadRC4Cipher = new ReadRC4Cipher(aKey)
-    val writeCipher: WriteRC4Cipher = new WriteRC4Cipher(bKey)
+    val readCipher: RC4ReadCipher = new RC4ReadCipher(aKey)
+    val writeCipher: RC4WriteCipher = new RC4WriteCipher(bKey)
 
     val crypto = cryptoProvider(readBuffer, readCipher)
 
@@ -59,15 +60,27 @@ class ReceiveInfoStep(skey: InfoHash, publicKey: LocalPublicKey, remotePublicKey
     println("initialLength: " + initialLength)
     val data = readData(readBuffer, initialLength, readCipher)
 
-    if (data.isDefined) {
-      reply.reply(data.get)
-    }
-    new ConfirmStep(readCipher, writeCipher, crypto)
+    //    if (data.isDefined) {
+    //      reply.reply(data.get)
+    //    }
+    new ConfirmStep(readCipher, writeCipher, crypto, data)
   }
 
-  private def sharedSecret(decode: Sha1): Unit = {
-    val sha1 = Sha1.from(REQ3_IV, secretKey.raw)
-    Sha1(decode.xor(sha1))
+  private def determineCorrectSKey(other: Sha1): Option[SKey] = {
+    val part1 = Sha1.from(REQ3_IV, secretKey.raw)
+    //    val search = Sha1(other.xor(part1))
+    //...HASH('req2', SKEY)^HASH('req3', S)
+    //        println("SKEY: " + skey)
+//    println("other: " + other)
+//    println("1: " + part1)
+//    println("3: " + Sha1(other.xor(part1)))
+    //decode.xor(sha1)
+    //    Sha1(decode.xor(sha1)).equals(Sha1(skey.raw))
+    //    println(search)
+    infoHashes.find(c => {
+//      println(s"-$c====${Sha1(Sha1.from(REQ2_IV, c.raw).xor(part1))}")
+      Sha1(Sha1.from(REQ2_IV, c.raw).xor(part1)).equals(other)
+    })
   }
 
   private def compareSecret(readBuffer: ByteBuffer): Boolean = {
@@ -102,15 +115,18 @@ class ReceiveInfoStep(skey: InfoHash, publicKey: LocalPublicKey, remotePublicKey
 
     new SecretKeySpec(aKey.raw, RC4_STREAM_ALG)
   }
-  private def cryptoProvider(readBuffer: ByteBuffer, readCipher: ReadCipher): CryptoProvider = {
+  private def cryptoProvider(readBuffer: ByteBuffer, readCipher: RC4ReadCipher): CryptoProvider = {
+    // ENCRYPT(VC, crypto_provide, len(PadC),
     val size = VC.length + 4
     val crypted = Array.ofDim[Byte](size)
 
     readBuffer.get(crypted)
+    println("crypted cryptoProvider: " + debug(crypted))
 
-    val plain = ByteBuffer.wrap(readCipher.update(crypted))
-    plain.position(plain.position() + VC.length)
-    println(plain)
+    val plain = ByteBuffer.wrap(readCipher.update(crypted)).order(ByteOrder.BIG_ENDIAN)
+    println("cryptoProvider: " + debug(plain))
+    plain.getLong
+    println("plain: " + plain)
     CryptoProviders.from(plain.getInt)
   }
 
@@ -151,4 +167,7 @@ class ReceiveInfoStep(skey: InfoHash, publicKey: LocalPublicKey, remotePublicKey
       Some(FakeBStrings(readCipher.update(initialPayload)))
     } else None
   }
+
+  private def debug(plain: ByteBuffer): String = Arrays.toString(plain.array)
+  private def debug(plain: Array[Byte]): String = Arrays.toString(plain)
 }

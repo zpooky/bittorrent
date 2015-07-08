@@ -15,7 +15,9 @@ import akka.util.ByteString
 import com.spooky.inbound.step.DoneStep
 import com.spooky.bittorrent.l.session.SessionManager
 import akka.io.Tcp.Write
-import akka.io.Tcp.Write
+import com.spooky.cipher.ReadPlain
+import com.spooky.cipher.WritePlain
+import com.spooky.cipher.MSEKeyPair
 
 //pstrlen:19|pstr:BitTorrent protocol|reserved:0000000000000000000000000000000000000000000100000000000000000000|info_has:Yj!ﾊXﾰ￾xﾀﾺFlￍﾉￊlwﾏ|peer-id:-lt0D20-Pﾖ￷ﾒﾛﾜￋ￿s
 
@@ -31,7 +33,7 @@ class PeerWireProtocolMessageDeserializerActor(client: InetSocketAddress, connec
   context watch connection
 
   private var step: InStep = null
-//  var become = false
+  //  var become = false
   override def receive = {
     case request @ Received(data) => {
       //      println(":" + data)
@@ -39,19 +41,23 @@ class PeerWireProtocolMessageDeserializerActor(client: InetSocketAddress, connec
       //      val cpy = buffer.duplicate
       //      println(client.getHostString + "|" + first)
       if (step == null && data.head == 19 && data.length == 68) {
-        val msg = new MessageParserControll(connection, this)
+        val msg = new MessageParserControll(connection, this)(MSEKeyPair(WritePlain, ReadPlain))
         msg.receive(request)
       } else {
         step = if (step == null) {
-          new InboundStep(SessionManager.test)
+          new InboundStep(SessionManager.infoHashes)
         } else step
-        val reply = exchange
-        step = step.step(data, reply).step(reply)
+        step = step.step(data).step(exchange)
         step match {
           case d: DoneStep => {
-            context.become(encrypted)
+            val msg = new MessageParserControll(connection, this)(d.keyPair)
+            if (d.data.isDefined) {
+              msg.receive(Received(d.data.get))
+            } else {
+              context.become(msg.receive)
+            }
           }
-          case _ => println("!!!!BASE")
+          case _ =>
         }
       }
     }
@@ -59,14 +65,7 @@ class PeerWireProtocolMessageDeserializerActor(client: InetSocketAddress, connec
 
   private def exchange: Reply = new Reply {
     def reply(r: ByteString): Unit = {
-      println("!!!SENT!!!" + r.length)
       connection ! Write(r)
-    }
-  }
-
-  private def encrypted: Actor.Receive = {
-    case Received(data) => {
-      println(data)
     }
   }
 }

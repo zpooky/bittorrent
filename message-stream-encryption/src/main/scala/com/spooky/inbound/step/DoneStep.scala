@@ -4,11 +4,10 @@ import com.spooky.inbound.InStep
 import akka.util.ByteString
 import com.spooky.inbound.Reply
 import com.spooky.inbound.OutStep
-import com.spooky.cipher.WriteCipher
-import com.spooky.cipher.ReadCipher
+import com.spooky.cipher.MSEKeyPair
 
-class DoneStep(writeCipher: WriteCipher, readCipher: ReadCipher) extends InStep with OutStep {
-  def step(in: ByteString, reply: Reply): OutStep = {
+class DoneStep(val keyPair: MSEKeyPair, val data: Option[ByteString]) extends InStep with OutStep {
+  def step(in: ByteString): OutStep = {
     ???
   }
 

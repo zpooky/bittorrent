@@ -24,7 +24,8 @@ abstract class Base {
 
   protected val DH_SIZE_BYTES = DH_P.length() / 2
 
-  protected val CRYPTO_RC4: Byte = 0x02
+  protected val CRYPTO_PLAIN: Byte = Plain.id
+  protected val CRYPTO_RC4: Byte = RC4.id
 
   protected val PADDING_MAX = 512
 

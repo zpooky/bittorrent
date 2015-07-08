@@ -35,7 +35,8 @@ case class Handshake(infoHash: InfoHash, peerId: PeerId) extends PeerWireMessage
   }
 }
 object Handshake {
-  def parse(buffer: ByteBuffer): Handshake = {
+  def parse(bs: ByteString): Handshake = {
+    val buffer = bs.toByteBuffer
     debug(buffer.duplicate())
     val length = buffer.get.asInstanceOf[Int] & 0xFF
     val p = read(buffer, length)
@@ -70,6 +71,7 @@ object Handshake {
   }
 }
 object PeerWireMessage {
+  def parse(bs: ByteString): List[PeerWireMessage] = parse(bs.toByteBuffer) //TODO
   def parse(buffer: ByteBuffer): List[PeerWireMessage] = {
     if (buffer.hasRemaining()) {
       apply(buffer) match {
@@ -102,7 +104,7 @@ object PeerWireMessage {
           case 7 => Piece.parse(length - 1, buffer)
           case 8 => Cancel.parse(buffer)
           case 9 => Port.parse(buffer)
-          case _ => null
+          case n => throw new RuntimeException(s"Unknown message id: $n")
         }
       }
     }

@@ -1,20 +1,20 @@
 package com.spooky.cipher
 
 import javax.crypto.spec.SecretKeySpec
+import javax.crypto.Cipher
 import java.nio.ByteBuffer
 import akka.util.ByteString
 import akka.util.FakeBStrings
 
-sealed trait ReadCipher {
+sealed trait WriteCipher {
   def update(bs: Array[Byte]): Array[Byte]
   def update(bb: ByteBuffer): ByteString
   def update(bb: ByteString): ByteString
 }
 
-final class RC4ReadCipher(readKey: SecretKeySpec) extends RC4Cipher(readKey, false) with ReadCipher
+class RC4WriteCipher(writeKey: SecretKeySpec) extends RC4Cipher(writeKey, true) with WriteCipher
 
-object ReadPlain extends ReadCipher {
-
+object WritePlain extends WriteCipher {
   def update(bb: ByteBuffer): ByteString = FakeBStrings(bb.duplicate)
 
   def update(bs: Array[Byte]): Array[Byte] = bs

@@ -10,10 +10,11 @@ import akka.io.Tcp
 import com.spooky.bittorrent.l.session.client.ClientSession
 import com.spooky.bittorrent.Showable
 import akka.event.Logging
+import com.spooky.cipher.MSEKeyPair
 
 case class Ack(sequence: Int, t: Thing) extends Event
-abstract class BufferingRetry(connection: ActorRef, session: ClientSession) extends Actor {
-
+abstract class BufferingRetry(connection: ActorRef, session: ClientSession, keyPair: MSEKeyPair) extends Actor {
+  private val writeCipher = keyPair.writeCipher
   private val log = Logging(context.system, this)
   private val chokePredictor = new ChokePredictor(Byte(65536), /*Size(2, MegaByte), */ session) //TODO find out a way to get buffer size
 
@@ -52,7 +53,7 @@ abstract class BufferingRetry(connection: ActorRef, session: ClientSession) exte
     }
   }
   protected def data: PartialFunction[Any, Unit]
-  protected def write(message: Showable): Unit = write(message.toByteString, Thing(message))
+  protected def write(message: Showable): Unit = write(writeCipher.update(message.toByteString), Thing(message))
   private def write(message: ByteString, t: Thing): Unit = buffering match {
     case true => {
       _buffer((message, Ack(getSequence, t)))

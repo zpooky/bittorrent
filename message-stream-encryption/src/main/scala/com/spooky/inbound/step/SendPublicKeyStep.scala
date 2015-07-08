@@ -13,7 +13,7 @@ import java.nio.ByteOrder
 import java.nio.ByteBuffer
 import akka.util.FakeBStrings
 
-class SendPublicKeyStep(skey: InfoHash, publicKey: LocalPublicKey, remotePublicKey: RemotePublicKey, secretKey: SecretKey) extends Base with OutStep {
+class SendPublicKeyStep(infoHashes: List[InfoHash], publicKey: LocalPublicKey, remotePublicKey: RemotePublicKey, secretKey: SecretKey) extends Base with OutStep {
   def step(reply: Reply): ReceiveInfoStep = {
     val padding = randomPadding()
     val rawPublicKey = publicKey.raw
@@ -29,7 +29,7 @@ class SendPublicKeyStep(skey: InfoHash, publicKey: LocalPublicKey, remotePublicK
 
     reply.reply(FakeBStrings(buffer.flip().asInstanceOf[ByteBuffer]))
 
-    new ReceiveInfoStep(skey, publicKey, remotePublicKey, secretKey)
+    new ReceiveInfoStep(infoHashes, publicKey, remotePublicKey, secretKey)
   }
 
 }
