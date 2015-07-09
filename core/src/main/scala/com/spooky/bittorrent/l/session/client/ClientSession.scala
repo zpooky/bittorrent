@@ -1,28 +1,32 @@
 package com.spooky.bittorrent.l.session.client
 
-import akka.actor.ActorRef
 import com.spooky.bittorrent.protocol.client.pwp.api.Choke
 import com.spooky.bittorrent.protocol.client.pwp.api.Unchoke
+import com.spooky.bittorrent.Showable
+import com.spooky.bittorrent.model.PeerId
+import com.spooky.cipher.MSEKeyPair
 
-class ClientSession(connection: ActorRef) extends ClientViewableSession {
+class ClientSession(val peerId: PeerId, val keyPair: MSEKeyPair) extends ClientViewableSession {
   var choking: Boolean = false
   def choked: Boolean = false
   private var i = 1
 
-  def choke(): Unit = {
+  def choke()(implicit write: Showable => Unit): Unit = {
     if (!choking) {
       println(i + ".choke")
       i = i + 1
-      connection ! Choke
+//      connection ! Choke
+      write(Choke)
       choking = true
     }
   }
 
-  def unchoke(): Unit = {
+  def unchoke()(implicit write: Showable => Unit): Unit = {
     if (choking) {
       println(i + ".unchoke")
       i = i + 1
-      connection ! Unchoke
+//      connection ! Unchoke
+      write(Unchoke)
       choking = false
     }
   }

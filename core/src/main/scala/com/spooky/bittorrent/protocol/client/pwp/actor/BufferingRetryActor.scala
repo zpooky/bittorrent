@@ -1,4 +1,4 @@
-package com.spooky.bittorrent.u
+package com.spooky.bittorrent.protocol.client.pwp.actor
 
 import akka.util.ByteString
 import akka.actor.Actor
@@ -8,13 +8,23 @@ import akka.io.Tcp.Write
 import akka.io.Tcp.CommandFailed
 import akka.io.Tcp
 import com.spooky.bittorrent.l.session.client.ClientSession
-import com.spooky.bittorrent.Showable
 import akka.event.Logging
-import com.spooky.cipher.MSEKeyPair
+import akka.actor.actorRef2Scala
+import com.spooky.bittorrent.u.ChokePredictor
+import com.spooky.bittorrent.u.Thing
+import com.spooky.bittorrent.u.Byte
+import scala.Range
+import akka.actor.Props
+import com.spooky.bittorrent.Showable
 
 case class Ack(sequence: Int, t: Thing) extends Event
-abstract class BufferingRetry(connection: ActorRef, session: ClientSession, keyPair: MSEKeyPair) extends Actor {
-  private val writeCipher = keyPair.writeCipher
+
+object BufferingRetryActor {
+  def props(connection: ActorRef, session: ClientSession): Props = Props(classOf[BufferingRetryActor], connection, session)
+}
+
+class BufferingRetryActor(connection: ActorRef, session: ClientSession) extends Actor {
+  val writeCipher = session.keyPair.writeCipher
   private val log = Logging(context.system, this)
   private val chokePredictor = new ChokePredictor(Byte(65536), /*Size(2, MegaByte), */ session) //TODO find out a way to get buffer size
 
@@ -25,6 +35,7 @@ abstract class BufferingRetry(connection: ActorRef, session: ClientSession, keyP
   private var outstanding = 0
   private var buffering = false
   private var sequence = 0
+  private var lastAckSequence = sequence
 
   override final def receive: PartialFunction[Any, Unit] = {
     case CommandFailed(w: Write) => {
@@ -40,6 +51,7 @@ abstract class BufferingRetry(connection: ActorRef, session: ClientSession, keyP
       //      log.error(a)
       outstanding = (outstanding - 1)
       chokePredictor.outgoing(a.t)
+      lastAckSequence = Math.max(lastAckSequence, a.sequence)
       checkBuffer
     }
     //    case Tcp.PeerClosed => {
@@ -47,18 +59,20 @@ abstract class BufferingRetry(connection: ActorRef, session: ClientSession, keyP
       println("outstanding:" + outstanding)
       context stop self
     }
-    case a: Any => {
-      chokePredictor.incomming(a)
-      data.apply(a)
+    case message: Showable => {
+      chokePredictor.incomming(message)
+      write(message)
+      //      data.apply(a)
     }
   }
-  protected def data: PartialFunction[Any, Unit]
-  protected def write(message: Showable): Unit = write(writeCipher.update(message.toByteString), Thing(message))
+  //  protected def data: PartialFunction[Any, Unit]
+  implicit private def write(message: Showable): Unit = write(writeCipher.update(message.toByteString), Thing(message))
   private def write(message: ByteString, t: Thing): Unit = buffering match {
     case true => {
       _buffer((message, Ack(getSequence, t)))
     }
     case false => {
+      //      println(s"sent ${message}")
       outstanding = (outstanding + 1)
       //      log.debug(s"sent ${message}")
       connection ! Write(message, Ack(getSequence, t))

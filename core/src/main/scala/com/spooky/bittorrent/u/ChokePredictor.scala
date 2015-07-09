@@ -15,26 +15,27 @@ object Thing {
 }
 case class PieceThing(length: Int) extends Thing
 object NoThing extends Thing
+
 class ChokePredictor(window: Size, session: ClientSession) {
   private[u] var outstanding: Long = 0
   private var max: Long = 0
   //Write buffer(server) - incomming
-  def incomming(l: Any): Unit = l match {
+  def incomming(l: Any)(implicit write: Showable => Unit): Unit = l match {
     case r: Request => update(r.length)
     case _          =>
   }
 
   //Write buffer(server) - outgoing
-  def outgoing(l: Thing): Unit = l match {
+  def outgoing(l: Thing)(implicit write: Showable => Unit): Unit = l match {
     case PieceThing(length) => update(-length)
     case _                  =>
   }
 
-  def outgoing(l: AbortPlaceholder): Unit = {
+  def outgoing(l: AbortPlaceholder)(implicit write: Showable => Unit): Unit = {
     update(-l.length)
   }
 
-  private def update(l: Long): Unit = {
+  private def update(l: Long)(implicit write: Showable => Unit): Unit = {
     outstanding = outstanding + l
     max = Math.max(max, outstanding)
 //    if(outstanding <= 0){
@@ -44,7 +45,7 @@ class ChokePredictor(window: Size, session: ClientSession) {
     tick
   }
 
-  private def tick: Unit = {
+  private def tick(implicit write: Showable => Unit): Unit = {
     if (shouldChoke) {
       session.choke()
     } else if (shouldUnchoke) {

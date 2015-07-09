@@ -41,4 +41,11 @@ private[cipher] abstract class RC4Cipher(key: SecretKeySpec, forEncryption: Bool
     FakeBStrings(update(bb.toArray))
   }
 
+  def updateToBytes(bb: ByteBuffer): Array[Byte] = {
+    val result = Array.ofDim[Byte](bb.remaining)
+    for (i <- 0 until result.length) {
+      result(i) = rc4Engine.returnByte(bb.get)
+    }
+    result
+  }
 }

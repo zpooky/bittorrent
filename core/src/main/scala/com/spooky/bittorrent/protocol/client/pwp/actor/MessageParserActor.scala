@@ -82,7 +82,7 @@ class MessageParserControll(connection: ActorRef, actor: Actor)(keyPair: MSEKeyP
   private def trafic: Actor.Receive = {
     case Received(data) => {
       for {
-        received <- PeerWireMessage.parse(readCipher.update(data)) //TODO support bytestring
+        received <- PeerWireMessage.parse(readCipher.update(data))
       } yield {
         log.debug(s"received: ${received}")
         handler ! received

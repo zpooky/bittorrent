@@ -11,25 +11,31 @@ import com.spooky.bittorrent.protocol.client.pwp.api.NotIntrested
 import com.spooky.bittorrent.protocol.client.pwp.api.Piece
 import com.spooky.bittorrent.protocol.client.pwp.api.Request
 import com.spooky.bittorrent.l.session.client.ClientSession
+import com.spooky.bittorrent.u.Byte
 import com.spooky.bittorrent.l.session.Session
-import com.spooky.bittorrent.u.BufferingRetry
 import com.spooky.bittorrent.model.PeerId
 import com.spooky.bittorrent.ImmutableByteBuffer
 import akka.event.Logging
 import akka.actor.ActorRef
 import akka.actor.Props
 import com.spooky.cipher.MSEKeyPair
+import com.spooky.bittorrent.Showable
+import akka.actor.Actor
 
 object PeerWireProtocolMessageActor {
-  def props(session: Session, connection: ActorRef, handshake: Handshake, keyPair: MSEKeyPair): Props = Props(classOf[PeerWireProtocolMessageActor], session, connection, handshake.peerId, keyPair)
+  def props(session: Session, connection: ActorRef, handshake: Handshake, keyPair: MSEKeyPair): Props = {
+    Props(classOf[PeerWireProtocolMessageActor], session, handshake.peerId, connection, keyPair)
+  }
 }
 
-class PeerWireProtocolMessageActor(session: Session, connection: ActorRef, peerId: PeerId, keyPair: MSEKeyPair) extends BufferingRetry(connection, new ClientSession(connection), keyPair) { //TODO central session
+class PeerWireProtocolMessageActor(session: Session, peerId: PeerId, connection: ActorRef, keyPair: MSEKeyPair) extends Actor {
+  private val brActorRef = context.actorOf(BufferingRetryActor.props(connection, session.init(peerId, keyPair)))
+  private def write: Showable => Unit = brActorRef.!
 
   private val log = Logging(context.system, this)
   private val fileManager = session.fileManager
 
-  override def data: PartialFunction[Any, Unit] = {
+  override def receive: Actor.Receive = {
     case Handshake(infoHash, _) => {
       write(Handshake(infoHash, session.peerId))
       if (fileManager.haveAnyBlocks) {
