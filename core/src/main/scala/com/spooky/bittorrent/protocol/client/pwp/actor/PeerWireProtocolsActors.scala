@@ -4,8 +4,11 @@ import akka.actor.ActorSystem
 import akka.actor.ActorRef
 import akka.actor.Props
 import com.spooky.bittorrent.protocol.client.pwp.tcp.TCPServer
+import com.spooky.bittorrent.actors.BittorrentActors
+import com.spooky.bittorrent.BTActors
 
-abstract class PeerWireProtocolsActors(actorSystem: ActorSystem) {
+trait PeerWireProtocolsActors {
+  this: BTActors =>
   //  private val test: ActorRef = actorSystem.actorOf(Props[Test]())
-  val api: ActorRef = actorSystem.actorOf(Props(classOf[TCPServer], PeerWireProtocolMessageDeserializerActor))
+  val api: ActorRef = register(_.actorOf(Props(classOf[TCPServer], PeerWireProtocolMessageDeserializerActor)))
 }

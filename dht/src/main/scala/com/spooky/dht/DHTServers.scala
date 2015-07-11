@@ -10,6 +10,10 @@ import com.spooky.bittorrent.Config
 import akka.actor.actorRef2Scala
 import com.spooky.Message
 
+object DHTServer {
+  def props: Props = Props(classOf[DHTServer])
+}
+
 class DHTServer extends Actor {
   import context.system
   IO(Udp) ! Udp.Bind(self, new InetSocketAddress(Config.hostname, Config.dhtPort))
