@@ -3,7 +3,7 @@ apply plugin: 'eclipse'
 repositories { jcenter() }
 
 dependencies {
-	testCompile "junit:junit:4.11"
-	compile 'commons-codec:commons-codec:1.10'
-	compile 'org.bouncycastle:bcprov-jdk15on:1.51'
+	testCompile "junit:junit:$junit.version"
+	compile "commons-codec:commons-codec:$commons-codec.version"
+	compile "org.bouncycastle:bcprov-jdk15on:$bouncycastle.version"
 }

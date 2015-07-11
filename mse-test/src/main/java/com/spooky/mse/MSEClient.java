@@ -22,7 +22,7 @@ public class MSEClient extends ExchangeBase {
 		try (SocketChannel channel = SocketChannel.open(local)) {
 			Reader r = r(channel);
 			Writer w = w(channel);
-			MSEKeyPair complete = new Outbound(SKey.fromHex("597f6a218a58b0fe7880ba12466ccd89ca6c778f")).sendPublicKey(w).receivePublicKey(r).complete(w);
+			MSEKeyPair complete = new Outbound(SKey.fromHex("597f6a218a58b0fe7880ba12466ccd89ca6c778f")).sendPublicKey(w).receivePublicKey(r).complete(w).debug(r);
 		}
 	}
 }

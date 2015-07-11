@@ -21,6 +21,7 @@ import akka.actor.Props
 import com.spooky.cipher.MSEKeyPair
 import com.spooky.bittorrent.Showable
 import akka.actor.Actor
+import akka.actor.Terminated
 
 object PeerWireProtocolMessageActor {
   def props(session: Session, connection: ActorRef, handshake: Handshake, keyPair: MSEKeyPair): Props = {
@@ -28,9 +29,11 @@ object PeerWireProtocolMessageActor {
   }
 }
 
-class PeerWireProtocolMessageActor(session: Session, peerId: PeerId, connection: ActorRef, keyPair: MSEKeyPair) extends Actor {
-  private val brActorRef = context.actorOf(BufferingRetryActor.props(connection, session.init(peerId, keyPair)))
+class PeerWireProtocolMessageActor(session: Session, otherPeerId: PeerId, connection: ActorRef, keyPair: MSEKeyPair) extends Actor {
+  private val brActorRef = context.actorOf(BufferingRetryActor.props(connection, session.init(otherPeerId, keyPair)))
   private def write: Showable => Unit = brActorRef.!
+
+  context watch connection
 
   private val log = Logging(context.system, this)
   private val fileManager = session.fileManager
@@ -58,6 +61,9 @@ class PeerWireProtocolMessageActor(session: Session, peerId: PeerId, connection:
     //    case p: CommandFailed => log.error(p.cmd.failureMessage)
     case NotIntrested => {
       //      println("outstanding:" + outstanding)
+    }
+    case e: Terminated => {
+
     }
     case a => log.error(s"unahandled message: ${a.getClass}")
   }

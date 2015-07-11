@@ -14,7 +14,9 @@ object Thing {
   }
 }
 case class PieceThing(length: Int) extends Thing
-object NoThing extends Thing
+object NoThing extends Thing {
+  override def toString = getClass.getSimpleName.replaceAllLiterally("$", "")
+}
 
 class ChokePredictor(window: Size, session: ClientSession) {
   private[u] var outstanding: Long = 0
@@ -38,10 +40,10 @@ class ChokePredictor(window: Size, session: ClientSession) {
   private def update(l: Long)(implicit write: Showable => Unit): Unit = {
     outstanding = outstanding + l
     max = Math.max(max, outstanding)
-//    if(outstanding <= 0){
-//      println(max)
-//      max = 0
-//    }
+    //    if(outstanding <= 0){
+    //      println(max)
+    //      max = 0
+    //    }
     tick
   }
 

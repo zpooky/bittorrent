@@ -18,6 +18,8 @@ import akka.io.Tcp.Write
 import com.spooky.cipher.ReadPlain
 import com.spooky.cipher.WritePlain
 import com.spooky.cipher.MSEKeyPair
+import com.spooky.bittorrent.protocol.client.pwp.api.Handshake
+import akka.actor.Terminated
 
 //pstrlen:19|pstr:BitTorrent protocol|reserved:0000000000000000000000000000000000000000000100000000000000000000|info_has:Yj!ﾊXﾰ￾xﾀﾺFlￍﾉￊlwﾏ|peer-id:-lt0D20-Pﾖ￷ﾒﾛﾜￋ￿s
 
@@ -41,7 +43,7 @@ class PeerWireProtocolMessageDeserializerActor(client: InetSocketAddress, connec
       //      val cpy = buffer.duplicate
       //      println(client.getHostString + "|" + first)
       if (step == null && data.head == 19 && data.length == 68) {
-        val msg = new MessageParserControll(connection, this)(MSEKeyPair(WritePlain, ReadPlain))
+        val msg = new MessageParserControl(connection, this)(MSEKeyPair(WritePlain, ReadPlain))
         msg.receive(request)
       } else {
         step = if (step == null) {
@@ -50,9 +52,10 @@ class PeerWireProtocolMessageDeserializerActor(client: InetSocketAddress, connec
         step = step.step(data).step(exchange)
         step match {
           case d: DoneStep => {
-            val msg = new MessageParserControll(connection, this)(d.keyPair)
+            step = null
+            val msg = new MessageParserControl(connection, this)(d.keyPair)
             if (d.data.isDefined) {
-              msg.receive(Received(d.data.get))
+              msg.receive(Handshake.parse(d.data.get))
             } else {
               context.become(msg.receive)
             }
@@ -60,6 +63,9 @@ class PeerWireProtocolMessageDeserializerActor(client: InetSocketAddress, connec
           case _ =>
         }
       }
+    }
+    case e: Terminated => {
+
     }
   }
 

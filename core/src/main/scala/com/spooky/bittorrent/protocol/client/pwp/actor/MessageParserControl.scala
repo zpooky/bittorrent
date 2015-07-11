@@ -12,49 +12,14 @@ import akka.actor.ActorContext
 import com.spooky.cipher.MSEKeyPair
 import com.spooky.cipher.WriteCipher
 import com.spooky.cipher.ReadCipher
+import akka.actor.Terminated
 
-//object MessageParserActor {
-//  def props(connection: ActorRef) = Props(classOf[MessageParserActor], connection)
-//}
-//class MessageParserActor(connection: ActorRef) extends Actor {
-//  private val log = Logging(context.system, this)
-//  private var handler: ActorRef = null //TODO construct
-//
-//  override def receive = {
-//    case Received(data) => {
-//      val handshake = Handshake.parse(data.toByteBuffer) //TODO
-//      SessionManager.get(handshake.infoHash) match {
-//        case Some(session) => {
-//          log.debug(s"received: ${handshake}")
-//          handler = context.actorOf(Props(classOf[PeerWireProtocolMessageActor], session, connection, handshake.peerId))
-//          handler ! handshake
-//          context.become(trafic)
-//        }
-//        case None => {
-//          //              debug(buffer.duplicate())
-//          //          log.error(handshake)
-//          log.warning("garbage received execpected handshake")
-//        }
-//      }
-//    }
-//  }
-//
-//  private def trafic: Receive = {
-//    case Received(data) => {
-//      for {
-//        received <- PeerWireMessage.parse(data.toByteBuffer) //TODO support bytestring
-//      } yield {
-//        log.debug(s"received: ${received}")
-//        handler ! received
-//      }
-//    }
-//  }
-//}
-
-class MessageParserControll(connection: ActorRef, actor: Actor)(keyPair: MSEKeyPair)(implicit context: ActorContext) {
+class MessageParserControl(connection: ActorRef, actor: Actor)(keyPair: MSEKeyPair)(implicit context: ActorContext) {
   private val readCipher = keyPair.readCipher
   private val log = Logging(context.system, actor)
   private var handler: ActorRef = null //TODO construct
+
+  context watch connection
 
   def receive: Actor.Receive = {
     case Received(data) => {
@@ -63,19 +28,22 @@ class MessageParserControll(connection: ActorRef, actor: Actor)(keyPair: MSEKeyP
       handle(handshake)
     }
     case handshake: Handshake => handle(handshake)
+    case e: Terminated => {
+
+    }
   }
 
   private def handle(handshake: Handshake): Unit = SessionManager.get(handshake.infoHash) match {
     case Some(session) => {
       log.debug(s"received: ${handshake}")
-      context.become(trafic)
       handler = context.actorOf(PeerWireProtocolMessageActor.props(session, connection, handshake, keyPair))
       handler ! handshake
+      context.become(trafic)
     }
     case None => {
       //              debug(buffer.duplicate())
       //          log.error(handshake)
-      log.warning("garbage received execpected handshake")
+      println("garbage received execpected handshake")
     }
   }
 
