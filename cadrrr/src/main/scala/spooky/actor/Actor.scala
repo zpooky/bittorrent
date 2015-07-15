@@ -19,7 +19,7 @@ trait Actor {
   def unhandled(message: Any): Unit = {
     message match {
       case Terminated(dead) => throw new DeathPactException(dead)
-      case r                => println(s"unhandled $r")
+      case r                => println(s"in ${getClass}: unhandled class ${r.getClass} | message $r")
     }
   }
 

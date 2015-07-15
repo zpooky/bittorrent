@@ -3,6 +3,7 @@ package spooky.util
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
 import java.nio.Buffer
+import java.util.Arrays
 
 object ByteString {
   private val UTF8 = Charset.forName("UTF8")
@@ -36,4 +37,8 @@ case class ByteString(arr: Array[Byte], roof: Int, index: Int = 0) {
   }
   def isEmpty: Boolean = roof == index
   def head: Byte = arr(index)
+
+  override def toString:String = {
+    s"index: $index roof: $roof | ${Arrays.toString(arr)}"
+  }
 }

@@ -34,7 +34,7 @@ object Tcp extends Channel {
   object NoAck extends Event
   case class Write(data: ByteString, ack: Event) extends Event
   object Write {
-    def apply(data: ByteString): Write = Write(data, NoAck)
+    def apply(data: ByteString): Write = Tcp.Write(data, NoAck)
   }
   case class Bind(handler: ActorRef, localAddress: InetSocketAddress) extends Event
   case class CommandFailed(event: Event) extends Event
@@ -42,13 +42,13 @@ object Tcp extends Channel {
     def toSocketAddress: SocketAddress = new InetSocketAddress(address, port)
   }
   object Address {
-    def apply(address: InetSocketAddress): Address = Address(address.getAddress.getHostAddress, address.getPort)
+    def apply(address: InetSocketAddress): Address = Tcp.Address(address.getAddress.getHostAddress, address.getPort)
   }
-  case class Connected(remoteAddress: Address, localAddress: InetSocketAddress) extends Event
+  case class Connected(remoteAddress: Tcp.Address, localAddress: InetSocketAddress) extends Event
   object Connected {
-    def apply(remoteAddress: InetSocketAddress, localAddress: InetSocketAddress): Connected = Connected(Address(remoteAddress), localAddress)
+    def apply(remoteAddress: InetSocketAddress, localAddress: InetSocketAddress): Connected = Tcp.Connected(Address(remoteAddress), localAddress)
   }
-  case class Register(handler: ActorRef, address: Address, keepOpenOnPeerClosed: Boolean = true, useResumeWriting: Boolean = false) extends Event
+  case class Register(handler: ActorRef, address: Tcp.Address, keepOpenOnPeerClosed: Boolean = true, useResumeWriting: Boolean = false) extends Event
   class ConnectionClosed extends Event
   case class Received(bs: ByteString) extends Event
 

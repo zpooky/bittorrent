@@ -30,8 +30,9 @@ private[io] class TcpThread(serverChannel: ServerSocketChannel, mainTcpActor: Ac
       buffer.clear()
       //blocking
       val available = selector.select()
-      val keys = selector.keys()
-      for (current <- keys) {
+      val keys = selector.keys().iterator()
+      while (keys.hasNext()) {
+        val current = keys.next()
         try {
           if (current.channel().isInstanceOf[ServerSocketChannel]) { //current.isAcceptable
             accept(selector)
@@ -40,15 +41,16 @@ private[io] class TcpThread(serverChannel: ServerSocketChannel, mainTcpActor: Ac
             val clientSocket = clientChannel.socket
             if (!clientChannel.isOpen()) {
               terminate(clientChannel)
-            } else { //current.isReadable
-               receive(clientChannel, buffer)
+              keys.remove()
+            } else if (current.isReadable) {
+              receive(clientChannel, buffer)
             }
           }
         } catch {
           case e: Exception => e.printStackTrace()
         }
       }
-      keys.clear()
+      //      keys.clear()
     }
 
   }
@@ -85,8 +87,10 @@ private[io] class TcpThread(serverChannel: ServerSocketChannel, mainTcpActor: Ac
     if (handlers != null) {
       val (messageActor, writeActor) = handlers
       clientChannel.read(buffer)
-      messageActor.!(Tcp.Received(ByteString.copy(buffer.flip())))(writeActor)
-    } else println("no handler")
+      if (buffer.position() != 0) {
+        messageActor.!(Tcp.Received(ByteString.copy(buffer.flip())))(writeActor)
+      }
+    }
   }
 
   private def actorsFor(clientChannel: SocketChannel): Tuple2[MessageActorRef, WriteActorRef] = actors.get(Tcp.Address(clientChannel.getRemoteAddress.asInstanceOf[InetSocketAddress]))
