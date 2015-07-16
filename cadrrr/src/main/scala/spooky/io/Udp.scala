@@ -32,6 +32,6 @@ object Udp extends Channel {
 }
 class Udp extends Actor {
   def receive: PartialFunction[Any, Unit] = {
-    ???
+    case a:Any => println(a)
   }
 }

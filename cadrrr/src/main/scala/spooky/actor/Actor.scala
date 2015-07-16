@@ -13,8 +13,8 @@ trait Actor {
 
   implicit lazy val context: ActorContext = new ActorContext(ActorSystem.singleton, ActorContext.getSelf) //TODO
   //is def since context is lazy
-  final implicit def sender(): ActorRef = context.sender()
-  final def self: ActorRef = context.self
+  final def sender(): ActorRef = context.sender()
+  final implicit lazy val self: ActorRef = context.self
 
   def unhandled(message: Any): Unit = {
     message match {

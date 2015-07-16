@@ -11,6 +11,10 @@ object Logging {
 }
 
 class Logging(system: ActorSystem, actor: Actor) {
-  def error(msg: String): Unit = println(msg)
-  def debug(msg: String): Unit = println(msg)
+  def error(msg: String): Unit = {
+//    println(msg)
+  }
+  def debug(msg: String): Unit = {
+//    println(msg)
+  }
 }

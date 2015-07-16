@@ -14,13 +14,14 @@ import java.net.InetSocketAddress
 import spooky.actor.Terminated
 import spooky.io.TcpThread._
 import spooky.actor.ActorContext
+import spooky.actor.ActorSystem
 
 object TcpThread {
   type MessageActorRef = ActorRef
   type WriteActorRef = ActorRef
 }
 
-private[io] class TcpThread(serverChannel: ServerSocketChannel, mainTcpActor: ActorRef, actors: ConcurrentHashMap[Tcp.Address, Tuple2[MessageActorRef, WriteActorRef]], clientChannels: ConcurrentHashMap[Tcp.Address, SocketChannel], private implicit val self: ActorRef) extends Runnable {
+private[io] class TcpThread(serverChannel: ServerSocketChannel, mainTcpActor: ActorRef, actors: ConcurrentHashMap[Tcp.Address, Tuple2[MessageActorRef, WriteActorRef]], clientChannels: ConcurrentHashMap[Tcp.Address, SocketChannel], actorSystem: ActorSystem) extends Runnable {
   def run(): Unit = {
     serverChannel.configureBlocking(false)
     val selector = Selector.open
@@ -64,7 +65,8 @@ private[io] class TcpThread(serverChannel: ServerSocketChannel, mainTcpActor: Ac
       val clientAddress = Tcp.Address(client.getRemoteAddress.asInstanceOf[InetSocketAddress])
       clientChannels.put(clientAddress, client)
 
-      mainTcpActor ! Tcp.Connected(clientAddress, client.getLocalAddress.asInstanceOf[InetSocketAddress])
+      val writeActor = actorSystem.actorOf(TcpWriteActor.props(client, actors))
+      mainTcpActor.!(Tcp.Connected(clientAddress, client.getLocalAddress.asInstanceOf[InetSocketAddress]))(writeActor)
     }
   }
 
@@ -76,8 +78,8 @@ private[io] class TcpThread(serverChannel: ServerSocketChannel, mainTcpActor: Ac
 
     if (handlers != null) {
       val (messageActor, writeActor) = handlers
-      messageActor ! Terminated(self)
-      writeActor ! Terminated(self)
+      messageActor ! Terminated(null)
+      writeActor ! Terminated(null)
     }
     clientChannel.close()
   }

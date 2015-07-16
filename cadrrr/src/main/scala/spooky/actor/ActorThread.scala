@@ -9,28 +9,28 @@ private class ActorThread(private val actorFactory: ActorFactory, private val qu
     ActorContext.setSelf(self)
     val actor = actorFactory.create
     actor.context.become(actor.receive)
-      try {
-        while (!Thread.interrupted()) {
-          val entry = queue.take()
+    try {
+      while (!Thread.interrupted()) {
+        val entry = queue.take()
 
-          val sender = entry._1
-          actor.context._sender = sender
+        val sender = entry._1
+        actor.context._sender = sender
 
-          val value = entry._2
+        val value = entry._2
 
-          val receiver = actor.context.receive
-          if (receiver.isDefinedAt(value)) {
-            receiver(entry._2)
-          } else actor.unhandled(value)
-        }
-        println("interrupted")
-      } catch {
-        case e: Throwable => e.printStackTrace()
-        case e: DeathPactException =>
-      } finally {
-        terminate(deathPact)
-        ActorContext.setSelf(null)
+        val receiver = actor.context.receive
+        if (receiver.isDefinedAt(value)) {
+          receiver(entry._2)
+        } else actor.unhandled(value)
       }
+      println("interrupted")
+    } catch {
+      case e: DeathPactException =>
+      case e: Throwable          => e.printStackTrace()
+    } finally {
+      terminate(deathPact)
+      ActorContext.setSelf(null)
+    }
   }
 
   private def terminate(deathPact: CopyOnWriteArrayList[ActorRef]): Unit = {

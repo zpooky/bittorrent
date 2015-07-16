@@ -59,37 +59,20 @@ object Tcp extends Channel {
 class Tcp(actorSystem: ActorSystem) extends Actor {
   def receive: PartialFunction[Any, Unit] = {
     case bind @ Tcp.Bind(mainTcpActor, localAddress) => {
-      val serverChannel = try {
-        ServerSocketChannel.open().bind(localAddress)
-      } catch {
-        case e: IOException => {
-          e.printStackTrace
-          sender() ! Tcp.CommandFailed(bind)
-          null
-        }
-      }
-      if (serverChannel != null) {
+      try {
+        val serverChannel = ServerSocketChannel.open().bind(localAddress)
+
         val clientChannels = new ConcurrentHashMap[Tcp.Address, SocketChannel]
         val actors = new ConcurrentHashMap[Tcp.Address, Tuple2[MessageActorRef, WriteActorRef]]
-        actorSystem.executors.submit(new TcpThread(serverChannel, mainTcpActor, actors, clientChannels, self))
-        context.become(bound(actors, clientChannels))
+
+        actorSystem.executors.submit(new TcpThread(serverChannel, mainTcpActor, actors, clientChannels, actorSystem))
+      } catch {
+        case e: Exception => {
+          e.printStackTrace
+          sender() ! Tcp.CommandFailed(bind)
+        }
       }
     }
   }
-
-  private def bound(actors: ConcurrentHashMap[Tcp.Address, Tuple2[MessageActorRef, WriteActorRef]], clientChannels: ConcurrentHashMap[Tcp.Address, SocketChannel]): PartialFunction[Any, Unit] = {
-    case Tcp.Register(messageActor, address, _, _) => {
-      if (!actors.containsKey(address)) {
-        //not atomic
-        val channel = clientChannels.get(address)
-        val writeActor = actorSystem.actorOf(TcpWriteActor.props(channel))
-        actors.put(address, (messageActor, writeActor))
-      } else {
-        //       handler.kill
-        throw new RuntimeException("wtf")
-      }
-    }
-  }
-
 }
 

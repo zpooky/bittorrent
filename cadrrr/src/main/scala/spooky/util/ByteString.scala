@@ -31,7 +31,7 @@ case class ByteString(arr: Array[Byte], roof: Int, index: Int = 0) {
     System.arraycopy(arr, index, result, 0, result.length)
     result
   }
-  def toByteBuffer: ByteBuffer = ???
+  def toByteBuffer: ByteBuffer = ByteBuffer.wrap(toArray)
   def take(n: Int): ByteString = {
     ByteString(arr, Math.min(arr.length, index + n))
   }
