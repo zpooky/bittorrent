@@ -3,9 +3,10 @@ package spooky.actor
 import scala.collection.JavaConversions._
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.Executors
-import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CopyOnWriteArraySet
 import scala.annotation.tailrec
 import java.util.Arrays
+import java.util.concurrent.CopyOnWriteArrayList
 
 object ActorSystem {
   private[actor] val singleton = new ActorSystem
@@ -21,7 +22,7 @@ class ActorSystem {
 
     val queue = new LinkedBlockingQueue[Tuple2[ActorRef, Any]]
     Test.list.add((props.c.getSimpleName, queue))
-    val deathPact = new CopyOnWriteArrayList[ActorRef]
+    val deathPact = new CopyOnWriteArraySet[ActorRef]
 
     val actorRef = new ActorRef(queue, deathPact)
 
@@ -29,7 +30,6 @@ class ActorSystem {
     actorRef
   }
 }
-//PeerWireProtocolMessageDeserializerActor: 1955506
 object Test {
   val list = new CopyOnWriteArrayList[Tuple2[String, LinkedBlockingQueue[Tuple2[ActorRef, Any]]]]
   lazy val t = ActorSystem.singleton.executors.submit(runna)
@@ -37,8 +37,13 @@ object Test {
   def runna: Runnable = new Runnable {
     def run(): Unit = {
       while (true) {
+        var b = false
         for (c <- list) {
           if (!c._2.isEmpty()) {
+            if(!b){
+              println("-------")
+              b= true
+            }
             println(s"${c._1}: ${c._2.size()}")
           }
         }

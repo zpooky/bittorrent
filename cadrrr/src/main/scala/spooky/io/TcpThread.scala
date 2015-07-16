@@ -15,13 +15,18 @@ import spooky.actor.Terminated
 import spooky.io.TcpThread._
 import spooky.actor.ActorContext
 import spooky.actor.ActorSystem
+import java.io.IOException
 
 object TcpThread {
   type MessageActorRef = ActorRef
   type WriteActorRef = ActorRef
 }
 
-private[io] class TcpThread(serverChannel: ServerSocketChannel, mainTcpActor: ActorRef, actors: ConcurrentHashMap[Tcp.Address, Tuple2[MessageActorRef, WriteActorRef]], clientChannels: ConcurrentHashMap[Tcp.Address, SocketChannel], actorSystem: ActorSystem) extends Runnable {
+private[io] class TcpThread(serverChannel: ServerSocketChannel, mainTcpActor: ActorRef)(actorSystem: ActorSystem) extends Runnable {
+
+  private val clientChannels = new ConcurrentHashMap[Tcp.Address, SocketChannel]
+  private val actors = new ConcurrentHashMap[Tcp.Address, Tuple2[MessageActorRef, WriteActorRef]]
+
   def run(): Unit = {
     serverChannel.configureBlocking(false)
     val selector = Selector.open
@@ -35,19 +40,31 @@ private[io] class TcpThread(serverChannel: ServerSocketChannel, mainTcpActor: Ac
       while (keys.hasNext()) {
         val current = keys.next()
         try {
-          if (current.channel().isInstanceOf[ServerSocketChannel]) { //current.isAcceptable
-            accept(selector)
+          if (current.channel().isInstanceOf[ServerSocketChannel]) {
+            if (current.isAcceptable) {
+              accept(selector)
+            }
           } else {
             val clientChannel = current.channel().asInstanceOf[SocketChannel]
             val clientSocket = clientChannel.socket
-            if (!clientChannel.isOpen()) {
-              terminate(clientChannel)
-              keys.remove()
-            } else if (current.isReadable) {
-              receive(clientChannel, buffer)
+            try {
+              if (!clientChannel.isOpen() || clientSocket.isClosed() || !clientSocket.isConnected()) {
+                terminate(clientChannel)
+                keys.remove()
+              } else if (current.isReadable) {
+                receive(clientChannel, buffer)
+              }
+            } catch {
+              case e: IOException => {
+                terminate(clientChannel)
+                keys.remove()
+              }
             }
           }
         } catch {
+          case e: IOException => {
+            keys.remove()
+          }
           case e: Exception => e.printStackTrace()
         }
       }

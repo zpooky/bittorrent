@@ -2,9 +2,9 @@ package spooky.actor
 
 import scala.collection.JavaConversions._
 import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CopyOnWriteArraySet
 
-private class ActorThread(private val actorFactory: ActorFactory, private val queue: LinkedBlockingQueue[Tuple2[ActorRef, Any]], private val deathPact: CopyOnWriteArrayList[ActorRef], private implicit val self: ActorRef) extends Runnable {
+private class ActorThread(private val actorFactory: ActorFactory, private val queue: LinkedBlockingQueue[Tuple2[ActorRef, Any]], private val deathPact: CopyOnWriteArraySet[ActorRef], private implicit val self: ActorRef) extends Runnable {
   def run(): Unit = {
     ActorContext.setSelf(self)
     val actor = actorFactory.create
@@ -33,9 +33,9 @@ private class ActorThread(private val actorFactory: ActorFactory, private val qu
     }
   }
 
-  private def terminate(deathPact: CopyOnWriteArrayList[ActorRef]): Unit = {
+  private def terminate(deathPact: CopyOnWriteArraySet[ActorRef]): Unit = {
     for (c <- deathPact) {
-      c.!(Terminated(self))(self)
+      c ! Terminated(self)
     }
     deathPact.clear()
   }

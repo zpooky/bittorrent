@@ -2,9 +2,9 @@ package spooky.actor
 
 import scala.collection.JavaConversions._
 import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CopyOnWriteArraySet
 
-class ActorRef private[actor] (private val queue: LinkedBlockingQueue[Tuple2[ActorRef, Any]], private val deathPact: CopyOnWriteArrayList[ActorRef]) {
+class ActorRef private[actor] (private val queue: LinkedBlockingQueue[Tuple2[ActorRef, Any]], private val deathPact: CopyOnWriteArraySet[ActorRef]) {
 
   private[actor] def registerDeathPack(actorRef: ActorRef): Unit = deathPact.add(actorRef)
 

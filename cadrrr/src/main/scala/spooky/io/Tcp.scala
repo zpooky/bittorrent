@@ -61,11 +61,7 @@ class Tcp(actorSystem: ActorSystem) extends Actor {
     case bind @ Tcp.Bind(mainTcpActor, localAddress) => {
       try {
         val serverChannel = ServerSocketChannel.open().bind(localAddress)
-
-        val clientChannels = new ConcurrentHashMap[Tcp.Address, SocketChannel]
-        val actors = new ConcurrentHashMap[Tcp.Address, Tuple2[MessageActorRef, WriteActorRef]]
-
-        actorSystem.executors.submit(new TcpThread(serverChannel, mainTcpActor, actors, clientChannels, actorSystem))
+        actorSystem.executors.submit(new TcpThread(serverChannel, mainTcpActor)(actorSystem))
       } catch {
         case e: Exception => {
           e.printStackTrace
