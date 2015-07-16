@@ -1,6 +1,6 @@
 package com.spooky.bencode
 
-import akka.util.ByteString
+import spooky.util.ByteString
 import scala.annotation.tailrec
 
 trait BStream {

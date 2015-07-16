@@ -1,14 +1,13 @@
 package com.spooky.bittorrent.protocol.client.pwp.tcp
 
-import akka.actor.Actor
-import akka.io.Tcp
-import akka.io.IO
+import spooky.actor.Actor
+import spooky.io.Tcp
+import spooky.io.IO
 import java.net.InetSocketAddress
 import com.spooky.bittorrent.Config
-import akka.actor.ActorRef
-import akka.io.Tcp._
-import akka.actor.ActorSystem
-import akka.actor.Props
+import spooky.actor.ActorRef
+import spooky.actor.ActorSystem
+import spooky.actor.Props
 
 class TCPServer(handlerProps: HandlerProps) extends Actor {
 
@@ -21,13 +20,14 @@ class TCPServer(handlerProps: HandlerProps) extends Actor {
       context stop self
     }
 
-    case Tcp.Connected(remote, local) =>
+    case Tcp.Connected(remote, local) => {
       val handler = context.actorOf(handlerProps.props(remote, sender()))
-      sender ! Tcp.Register(handler, keepOpenOnPeerClosed = false, useResumeWriting = false)
+      sender ! Tcp.Register(handler, remote, keepOpenOnPeerClosed = true, useResumeWriting = false)
+    }
   }
 
 }
 
 trait HandlerProps {
-  def props(client: InetSocketAddress, connection: ActorRef): Props
+  def props(client: Tcp.Address, connection: ActorRef): Props
 }

@@ -1,7 +1,7 @@
 package com.spooky.inbound
 
 import javax.crypto.KeyAgreement
-import akka.util.ByteString
+import spooky.util.ByteString
 import java.math.BigInteger
 import java.security.KeyFactory
 import java.security.PublicKey

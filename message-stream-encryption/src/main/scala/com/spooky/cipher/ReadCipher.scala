@@ -2,7 +2,7 @@ package com.spooky.cipher
 
 import javax.crypto.spec.SecretKeySpec
 import java.nio.ByteBuffer
-import akka.util.ByteString
+import spooky.util.ByteString
 import akka.util.FakeBStrings
 
 sealed trait ReadCipher {

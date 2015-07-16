@@ -2,7 +2,7 @@ package com.spooky.bittorrent
 
 import com.spooky.bittorrent.model.TorrentRef
 import com.spooky.bittorrent.metainfo.Torrent
-import akka.actor.ActorSystem
+import spooky.actor.ActorSystem
 import com.spooky.bittorrent.model.PeerId
 import com.spooky.bittorrent.actors.BittorrentActors
 import com.spooky.bittorrent.protocol.server.tracker.TrackerProvider
@@ -14,7 +14,7 @@ import java.nio.file.Path
 import com.spooky.bittorrent.l.file.FileInitiator
 import com.spooky.bittorrent.model.TorrentSetup
 import com.spooky.bittorrent.l.file.FileInitiator2
-import com.typesafe.config.ConfigFactory
+//import com.typesafe.config.ConfigFactory
 import java.io.File
 
 object BittorrentAPI {

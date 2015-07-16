@@ -1,7 +1,7 @@
 package com.spooky.bittorrent.protocol.client.pwp.api
 
 import com.spooky.bittorrent.model.PeerId
-import akka.util.ByteString
+import spooky.util.ByteString
 import java.nio.ByteOrder
 import java.nio.ByteBuffer
 import com.spooky.bittorrent.Binary

@@ -1,6 +1,6 @@
 package com.spooky.inbound
 
-import akka.util.ByteString
+import spooky.util.ByteString
 
 trait Reply {
   def reply(r: ByteString): Unit

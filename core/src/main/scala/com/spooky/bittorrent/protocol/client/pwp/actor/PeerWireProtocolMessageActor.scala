@@ -1,5 +1,6 @@
 package com.spooky.bittorrent.protocol.client.pwp.actor
 
+import scala.collection.JavaConversions._
 import com.spooky.bittorrent.protocol.client.pwp.api.Handshake
 import com.spooky.bittorrent.protocol.client.pwp.api.Bitfield
 import com.spooky.bittorrent.protocol.client.pwp.api.Intrested
@@ -15,13 +16,13 @@ import com.spooky.bittorrent.u.Byte
 import com.spooky.bittorrent.l.session.Session
 import com.spooky.bittorrent.model.PeerId
 import com.spooky.bittorrent.ImmutableByteBuffer
-import akka.event.Logging
-import akka.actor.ActorRef
-import akka.actor.Props
+import spooky.event.Logging
+import spooky.actor.ActorRef
+import spooky.actor.Props
 import com.spooky.cipher.MSEKeyPair
 import com.spooky.bittorrent.Showable
-import akka.actor.Actor
-import akka.actor.Terminated
+import spooky.actor.Actor
+import spooky.actor.Terminated
 
 object PeerWireProtocolMessageActor {
   def props(session: Session, connection: ActorRef, handshake: Handshake, keyPair: MSEKeyPair): Props = {
@@ -38,7 +39,7 @@ class PeerWireProtocolMessageActor(session: Session, otherPeerId: PeerId, connec
   private val log = Logging(context.system, this)
   private val fileManager = session.fileManager
 
-  override def receive: Actor.Receive = {
+  override def receive: PartialFunction[Any, Unit] = {
     case Handshake(infoHash, _) => {
       write(Handshake(infoHash, session.peerId))
       if (fileManager.haveAnyBlocks) {
@@ -62,9 +63,5 @@ class PeerWireProtocolMessageActor(session: Session, otherPeerId: PeerId, connec
     case NotIntrested => {
       //      println("outstanding:" + outstanding)
     }
-    case e: Terminated => {
-
-    }
-    case a => log.error(s"unahandled message: ${a.getClass}")
   }
 }

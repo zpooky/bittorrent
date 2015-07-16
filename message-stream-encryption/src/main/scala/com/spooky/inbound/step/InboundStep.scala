@@ -1,7 +1,7 @@
 package com.spooky.inbound.step
 
 import com.spooky.bittorrent.InfoHash
-import akka.util.ByteString
+import spooky.util.ByteString
 import com.spooky.inbound.PublicKeyBase
 import com.spooky.inbound.ReceivePublicKey
 import com.spooky.inbound.Reply

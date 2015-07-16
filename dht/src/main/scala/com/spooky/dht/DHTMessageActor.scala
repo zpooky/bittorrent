@@ -1,7 +1,7 @@
 package com.spooky.dht
 
-import akka.actor.Actor
-import akka.actor.ActorRef
+import spooky.actor.Actor
+import spooky.actor.ActorRef
 import com.spooky.Message
 import com.spooky.DHT
 import java.net.InetSocketAddress
@@ -14,11 +14,11 @@ import com.spooky.DHT.GetPeersResponse
 import com.spooky.DHT.AnnouncePeersQuery
 import com.spooky.DHT.AnnoucePeersResponse
 import com.spooky.bencode.ByteStringBStream
-import akka.io.Udp
-import akka.util.ByteString
+import spooky.io.Udp
+import spooky.util.ByteString
 
 class DHTMessageActor extends Actor {
-  def receive: Receive = {
+  def receive: PartialFunction[Any, Unit] = {
     case Message(data, address, sender) => {
       if (data.isEmpty) {
         println(s"data was empty from ${address.getAddress}")

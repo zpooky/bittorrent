@@ -3,31 +3,32 @@ package com.spooky.bittorrent.protocol.client.pwp.actor
 import scala.collection.JavaConversions._
 import com.spooky.bittorrent.protocol.client.pwp.tcp.HandlerProps
 import java.net.InetSocketAddress
-import akka.actor.ActorRef
-import akka.actor.Props
-import akka.actor.Actor
-import akka.event.Logging
+import spooky.actor.ActorRef
+import spooky.actor.Props
+import spooky.actor.Actor
+import spooky.event.Logging
 import com.spooky.inbound.InStep
-import akka.io.Tcp.Received
+import spooky.io.Tcp.Received
 import com.spooky.inbound.step.InboundStep
 import com.spooky.inbound.Reply
-import akka.util.ByteString
+import spooky.util.ByteString
 import com.spooky.inbound.step.DoneStep
 import com.spooky.bittorrent.l.session.SessionManager
-import akka.io.Tcp.Write
+import spooky.io.Tcp.Write
 import com.spooky.cipher.ReadPlain
 import com.spooky.cipher.WritePlain
 import com.spooky.cipher.MSEKeyPair
 import com.spooky.bittorrent.protocol.client.pwp.api.Handshake
-import akka.actor.Terminated
+import spooky.actor.Terminated
+import spooky.io.Tcp
 
 //pstrlen:19|pstr:BitTorrent protocol|reserved:0000000000000000000000000000000000000000000100000000000000000000|info_has:Yj!ﾊXﾰ￾xﾀﾺFlￍﾉￊlwﾏ|peer-id:-lt0D20-Pﾖ￷ﾒﾛﾜￋ￿s
 
 object PeerWireProtocolMessageDeserializerActor extends HandlerProps {
-  def props(client: InetSocketAddress, connection: ActorRef) = Props(classOf[PeerWireProtocolMessageDeserializerActor], client, connection)
+  def props(client: Tcp.Address, connection: ActorRef) = Props(classOf[PeerWireProtocolMessageDeserializerActor], client, connection)
 }
 
-class PeerWireProtocolMessageDeserializerActor(client: InetSocketAddress, connection: ActorRef) extends Actor {
+class PeerWireProtocolMessageDeserializerActor(client: Tcp.Address, connection: ActorRef) extends Actor {
   private val log = Logging(context.system, this)
   private var handler: ActorRef = null
 
@@ -36,7 +37,7 @@ class PeerWireProtocolMessageDeserializerActor(client: InetSocketAddress, connec
 
   private var step: InStep = null
   //  var become = false
-  override def receive = {
+  override def receive: PartialFunction[Any, Unit] = {
     case request @ Received(data) => {
       //      println(":" + data)
       //      val buffer = data.toByteBuffer.order(ByteOrder.BIG_ENDIAN)
@@ -63,9 +64,6 @@ class PeerWireProtocolMessageDeserializerActor(client: InetSocketAddress, connec
           case _ =>
         }
       }
-    }
-    case e: Terminated => {
-
     }
   }
 

@@ -9,12 +9,10 @@ import scala.concurrent.Future
 import spray.httpx.unmarshalling.Unmarshaller
 import spray.http.HttpEntity
 import spray.httpx.unmarshalling._
-import akka.actor.ActorSystem
 import scala.concurrent.ExecutionContext
 import com.spooky.bittorrent.actors.BittorrentActors
 import spray.httpx.UnsuccessfulResponseException
 import scala.concurrent.duration._
-import akka.util.Timeout
 import com.spooky.bittorrent.model.TorrentStatistics
 import java.net.URL
 import spray.http.Uri
@@ -28,6 +26,8 @@ import com.spooky.bittorrent.model.TorrentConfiguration
 import com.spooky.bittorrent.Config
 import com.spooky.bittorrent.protocol.server.tracker._
 import com.spooky.bittorrent.bencode.Bencodes
+import akka.util.Timeout
+import akka.actor.ActorSystem
 
 class TrackerManager(tracker: Tracker)(implicit context: ExecutionContext, actorSystem: ActorSystem, actors: BittorrentActors) {
   protected val UTF8 = Charset.forName("UTF8")

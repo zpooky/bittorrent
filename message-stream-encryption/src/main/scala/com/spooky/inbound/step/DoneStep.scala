@@ -1,7 +1,7 @@
 package com.spooky.inbound.step
 
 import com.spooky.inbound.InStep
-import akka.util.ByteString
+import spooky.util.ByteString
 import com.spooky.inbound.Reply
 import com.spooky.inbound.OutStep
 import com.spooky.cipher.MSEKeyPair

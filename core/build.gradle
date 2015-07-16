@@ -22,7 +22,7 @@ dependencies {
 
 	//logging
 	compile 'ch.qos.logback:logback-classic:1.1.2'
-	compile 'com.typesafe.akka:akka-slf4j_2.11:2.3.9'
+//	compile 'com.typesafe.akka:akka-slf4j_2.11:2.3.9'
 
 	//encryption
 	compile 'org.bouncycastle:bcprov-jdk15on:1.51'
@@ -35,6 +35,7 @@ dependencies {
 			project(':com.spooky.bittorrent-message-stream-encryption'),
 			project(':com.spooky.bittorrent-bencode'),
 			project(':com.spooky.bittorrent-dht'),
+			project(':com.spooky.bittorrent-cadrrr'),
 			)
 }
 

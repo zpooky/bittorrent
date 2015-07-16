@@ -1,13 +1,12 @@
 package com.spooky.dht
 
 import java.net.InetSocketAddress
-import akka.actor.Actor
-import akka.actor.ActorRef
-import akka.actor.Props
-import akka.io.IO
-import akka.io.Udp
+import spooky.actor.Actor
+import spooky.actor.ActorRef
+import spooky.actor.Props
+import spooky.io.IO
+import spooky.io.Udp
 import com.spooky.bittorrent.Config
-import akka.actor.actorRef2Scala
 import com.spooky.Message
 
 object DHTServer {
@@ -15,10 +14,12 @@ object DHTServer {
 }
 
 class DHTServer extends Actor {
+
   import context.system
+
   IO(Udp) ! Udp.Bind(self, new InetSocketAddress(Config.hostname, Config.dhtPort))
 
-  lazy val handler = system.actorOf(Props(classOf[DHTMessageActor]))
+  lazy val handler = context.system.actorOf(Props(classOf[DHTMessageActor]))
 
   def receive = {
     case Udp.CommandFailed(_: Udp.Bind) => {

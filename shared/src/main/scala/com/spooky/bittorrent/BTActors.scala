@@ -1,7 +1,7 @@
 package com.spooky.bittorrent
 
-import akka.actor.ActorSystem
-import akka.actor.ActorRef
+import spooky.actor.ActorSystem
+import spooky.actor.ActorRef
 
 trait BTActors {
   def register(actor: ActorSystem => ActorRef): ActorRef

@@ -1,8 +1,8 @@
 package com.spooky.bittorrent.bencode
 
 import com.spooky.bencode.BStream
-import akka.util.ByteString
 import spray.http.HttpData
+import akka.util.ByteString
 
 object HttpDataBStream {
   def apply(data: HttpData.NonEmpty): HttpDataBStream = {

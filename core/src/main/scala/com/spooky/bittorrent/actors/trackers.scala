@@ -1,6 +1,6 @@
 package com.spooky.bittorrent.actors
 
-import akka.actor.Actor
+import spooky.actor.Actor
 import com.spooky.bittorrent.metainfo.Tracker
 
 class AnnounceActor extends Actor {

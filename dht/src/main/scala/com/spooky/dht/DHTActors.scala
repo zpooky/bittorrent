@@ -1,6 +1,6 @@
 package com.spooky.dht
 
-import akka.actor.ActorRef
+import spooky.actor.ActorRef
 import com.spooky.bittorrent.BTActors
 
 trait DHTActors {

@@ -1,6 +1,6 @@
 package com.spooky.inbound
 
-import akka.util.ByteString
+import spooky.util.ByteString
 
 trait InStep {
   def step(in: ByteString): OutStep

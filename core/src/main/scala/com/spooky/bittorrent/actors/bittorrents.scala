@@ -1,6 +1,6 @@
 package com.spooky.bittorrent.actors
 
-import akka.actor.Actor
+import spooky.actor.Actor
 import com.spooky.bittorrent.model.TorrentSetup
 import com.spooky.bittorrent.l.session.SessionManager
 import com.spooky.bittorrent.model.EnrichedTorrentSetup

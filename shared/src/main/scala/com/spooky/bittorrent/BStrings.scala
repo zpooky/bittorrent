@@ -1,6 +1,6 @@
 package com.spooky.bittorrent
 
-import akka.util.ByteString
+import spooky.util.ByteString
 import java.nio.ByteBuffer
 import akka.util.FakeBStrings
 

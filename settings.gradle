@@ -1,4 +1,4 @@
-include 'shared', 'message-stream-encryption', 'core', 'bencode', 'dht', 'tools'
+include 'shared', 'message-stream-encryption', 'core', 'bencode', 'dht', 'tools', 'cadrrr'
 
 //rootProject.children.each { it.name = "com.spooky.bittorrent-" + it.name }
 

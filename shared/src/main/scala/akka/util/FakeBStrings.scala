@@ -1,10 +1,9 @@
 package akka.util
 
-import akka.util.ByteString.ByteString1
+import spooky.util.ByteString
 import java.nio.ByteBuffer
-import akka.util.ByteString.ByteString1C
 
 object FakeBStrings {
-  def apply(bs: Array[Byte]): ByteString = ByteString1(bs)
-  def apply(bg: ByteBuffer): ByteString = ByteString1(bg.array()) //TODO
+  def apply(bs: Array[Byte]): spooky.util.ByteString = spooky.util.ByteString(bs)
+  def apply(bg: ByteBuffer): spooky.util.ByteString = spooky.util.ByteString(bg.array()) //TODO
 }

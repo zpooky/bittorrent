@@ -1,7 +1,7 @@
 package com.spooky.bittorrent
 
 import java.nio.ByteBuffer
-import akka.util.ByteString
+import spooky.util.ByteString
 import akka.util.FakeBStrings
 
 trait Showable {

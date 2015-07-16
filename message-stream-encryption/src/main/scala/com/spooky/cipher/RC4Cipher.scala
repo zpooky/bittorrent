@@ -4,7 +4,7 @@ import javax.crypto.spec.SecretKeySpec
 import java.nio.ByteBuffer
 import org.bouncycastle.crypto.engines.RC4Engine
 import org.bouncycastle.crypto.params.KeyParameter
-import akka.util.ByteString
+import spooky.util.ByteString
 import akka.util.FakeBStrings
 
 private[cipher] abstract class RC4Cipher(key: SecretKeySpec, forEncryption: Boolean) {

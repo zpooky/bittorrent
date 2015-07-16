@@ -2,7 +2,7 @@ package com.spooky
 
 import com.spooky.bittorrent.InfoHash
 import java.net.InetSocketAddress
-import akka.util.ByteString
+import spooky.util.ByteString
 import com.spooky.dht.Token
 import com.spooky.dht.Address
 import com.spooky.bencode.Bencode
@@ -19,7 +19,7 @@ import com.spooky.bencode.BValue
 import com.spooky.bencode.BInteger
 import java.nio.charset.Charset
 import org.apache.commons.codec.binary.Hex
-import akka.actor.ActorRef
+import spooky.actor.ActorRef
 
 sealed case class Message(data: ByteString, address: InetSocketAddress, sender: ActorRef)
 

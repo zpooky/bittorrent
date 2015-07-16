@@ -4,7 +4,7 @@ import com.spooky.inbound.InStep
 import com.spooky.inbound.OutStep
 import com.spooky.inbound.Base
 import com.spooky.inbound.Reply
-import akka.util.ByteString
+import spooky.util.ByteString
 import com.spooky.bittorrent.InfoHash
 import com.spooky.inbound.LocalPublicKey
 import com.spooky.inbound.RemotePublicKey

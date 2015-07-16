@@ -2,7 +2,7 @@ package com.spooky.bencode
 
 import scala.annotation.tailrec
 import com.spooky.bencode.wtf._
-import akka.util.ByteString
+import spooky.util.ByteString
 
 object Bencode extends BaseBencode
 abstract class BaseBencode {
