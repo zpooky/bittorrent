@@ -9,10 +9,10 @@ class ActorRef private[actor] (private val queue: LinkedBlockingQueue[Tuple2[Act
   private[actor] def registerDeathPack(actorRef: ActorRef): Unit = deathPact.add(actorRef)
 
   def !(msg: Any)(implicit sender: ActorRef = Actor.noSender): Unit = {
-    if(sender == null){
-      println("Sender is null")
-      Thread.dumpStack()
-    }
+//    if(sender == null){
+//      println("Sender is null")
+//      Thread.dumpStack()
+//    }
     assert(queue.offer((sender, msg)))
   }
 }
