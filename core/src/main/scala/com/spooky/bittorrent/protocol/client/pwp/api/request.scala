@@ -15,17 +15,18 @@ import scala.annotation.tailrec
 import com.spooky.bittorrent.InfoHash
 import com.spooky.bittorrent.Showable
 import org.apache.commons.codec.binary.Hex
+import java.nio.BufferUnderflowException
 
 abstract class PeerWireMessage
 case class Handshake(infoHash: InfoHash, peerId: PeerId) extends PeerWireMessage with Showable {
   def toByteBuffer: ByteBuffer = {
     val buffer = ByteBuffer.allocate(1 + 19 + 8 + 20 + 20).order(ByteOrder.BIG_ENDIAN)
     buffer.put(19.asInstanceOf[Byte])
-    val ascii = Charset.forName("ASCII")
-    buffer.put("BitTorrent protocol".getBytes(ascii))
+    val UTF8 = Charset.forName("UTF8")
+    buffer.put("BitTorrent protocol".getBytes(UTF8))
     buffer.putLong(0)
     buffer.put(infoHash.raw)
-    buffer.put(peerId.id.getBytes(ascii))
+    buffer.put(peerId.id.getBytes(UTF8))
     buffer.flip().asInstanceOf[ByteBuffer]
   }
   override def equals(other: Any): Boolean = other match {

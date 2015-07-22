@@ -3,6 +3,7 @@ package spooky.actor
 import scala.collection.JavaConversions._
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.CopyOnWriteArraySet
+import spooky.io.Tcp
 
 private class ActorThread(private val actorFactory: ActorFactory, private val queue: LinkedBlockingQueue[Tuple2[ActorRef, Any]], private val deathPact: CopyOnWriteArraySet[ActorRef], private implicit val self: ActorRef) extends Runnable {
   def run(): Unit = {

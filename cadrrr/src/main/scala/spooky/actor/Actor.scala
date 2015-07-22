@@ -1,6 +1,7 @@
 package spooky.actor
 
 import scala.collection.JavaConversions._
+import spooky.io.Tcp
 
 object Actor {
   private[actor] val noSender: ActorRef = null
@@ -18,8 +19,9 @@ trait Actor {
 
   def unhandled(message: Any): Unit = {
     message match {
-      case Terminated(dead) => throw new DeathPactException(dead)
-      case r                => println(s"in ${getClass}: unhandled class ${r.getClass} | message $r")
+      case Terminated(dead)        => throw new DeathPactException(dead)
+      case _: Tcp.ConnectionClosed =>
+      case r                       => println(s"in ${getClass}: unhandled class ${r.getClass} | message $r")
     }
   }
 

@@ -118,6 +118,7 @@ private[io] class TcpThread(serverChannel: ServerSocketChannel, mainTcpActor: Ac
 
     if (handlers != null) {
       val (messageActor, writeActor) = handlers
+      messageActor ! new Tcp.ConnectionClosed
       messageActor ! Terminated(null)
       writeActor ! Terminated(null)
     }

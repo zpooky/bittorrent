@@ -27,16 +27,17 @@ import spooky.actor.Props
  */
 object Tcp extends Channel {
   def props(implicit actorSystem: ActorSystem): Props = Props(classOf[Tcp], actorSystem)
-
+  //command is something the application issues
+  abstract class Command extends Event
   abstract class Event {
 
   }
   object NoAck extends Event
-  case class Write(data: ByteString, ack: Event) extends Event
+  case class Write(data: ByteString, ack: Event) extends Command
   object Write {
     def apply(data: ByteString): Write = Tcp.Write(data, NoAck)
   }
-  case class Bind(handler: ActorRef, localAddress: InetSocketAddress) extends Event
+  case class Bind(handler: ActorRef, localAddress: InetSocketAddress) extends Command
   case class CommandFailed(event: Event) extends Event
   case class Address(address: String, port: Int) {
     def toSocketAddress: SocketAddress = new InetSocketAddress(address, port)
@@ -48,9 +49,12 @@ object Tcp extends Channel {
   object Connected {
     def apply(remoteAddress: InetSocketAddress, localAddress: InetSocketAddress): Connected = Tcp.Connected(Address(remoteAddress), localAddress)
   }
-  case class Register(handler: ActorRef, address: Tcp.Address, keepOpenOnPeerClosed: Boolean = true, useResumeWriting: Boolean = false) extends Event
+  case class Register(handler: ActorRef, address: Tcp.Address, keepOpenOnPeerClosed: Boolean = true, useResumeWriting: Boolean = false) extends Command
   class ConnectionClosed extends Event
   case class Received(bs: ByteString) extends Event
+
+  object Close extends Command
+  object Closeed extends Event
 
 }
 //TODO should use nonblocking Single Produce Single Consumer queue for received messages

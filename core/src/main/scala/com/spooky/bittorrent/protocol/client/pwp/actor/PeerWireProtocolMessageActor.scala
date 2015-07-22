@@ -31,7 +31,7 @@ object PeerWireProtocolMessageActor {
 }
 
 class PeerWireProtocolMessageActor(session: Session, otherPeerId: PeerId, connection: ActorRef, keyPair: MSEKeyPair) extends Actor {
-  private val brActorRef = context.actorOf(BufferingRetryActor.props(connection, session.init(otherPeerId, keyPair)))
+  private val brActorRef = context.actorOf(BufferingRetryActor.props(connection, new ClientSession(otherPeerId, keyPair)))
   private def write: Showable => Unit = brActorRef.!
 
   context watch connection

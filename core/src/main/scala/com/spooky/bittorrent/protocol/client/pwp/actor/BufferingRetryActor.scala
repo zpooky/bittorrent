@@ -49,7 +49,7 @@ class BufferingRetryActor(connection: ActorRef, session: ClientSession) extends 
 
   override def receive: PartialFunction[Any, Unit] = {
     case CommandFailed(w: Write) => {
-//      val m = w.wantsAck
+      //      val m = w.wantsAck
       //      connection ! ResumeWriting
       //      context become buffering(ack)
       //      log.error("O/S buffesr was full|" + m + "|" + outstanding + "|" + buffering + ":" + w.ack)
@@ -74,10 +74,8 @@ class BufferingRetryActor(connection: ActorRef, session: ClientSession) extends 
     //    case Tcp.PeerClosed => {
     case e: ConnectionClosed => {
       println(s"outstanding: $outstanding")
-      context stop self
     }
     case message: Showable => {
-      //      println(s"msg: $message")
       chokePredictor.incomming(message)
       write(message)
       //      data.apply(a)
