@@ -8,7 +8,8 @@ import akka.util.FakeBStrings
 sealed trait ReadCipher {
   def update(bs: Array[Byte]): Array[Byte]
   def update(bb: ByteBuffer): ByteString
-  def update(bb: ByteString): ByteString
+  def update(bs: ByteString): ByteString
+  def updateBB(bs: ByteString): ByteBuffer
 }
 
 final class RC4ReadCipher(readKey: SecretKeySpec) extends RC4Cipher(readKey, false) with ReadCipher
@@ -19,5 +20,7 @@ object ReadPlain extends ReadCipher {
 
   def update(bs: Array[Byte]): Array[Byte] = bs
 
-  def update(bb: ByteString): ByteString = bb
+  def update(bs: ByteString): ByteString = bs
+
+  def updateBB(bs: ByteString): ByteBuffer = bs.toByteBuffer
 }

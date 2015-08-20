@@ -48,4 +48,12 @@ private[cipher] abstract class RC4Cipher(key: SecretKeySpec, forEncryption: Bool
     }
     result
   }
+
+  def updateBB(bs: ByteString): ByteBuffer = {
+    val result = ByteBuffer.allocate(bs.length)
+    for (i <- 0 until result.limit) {
+      result.put(rc4Engine.returnByte(bs(i)))
+    }
+    result
+  }
 }
