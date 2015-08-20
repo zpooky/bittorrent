@@ -14,10 +14,8 @@ class Session(val fileManager: TorrentFileManager, val peerId: PeerId) extends V
   @volatile private var activeListeners: Int = 0
   @volatile private var activeClients: Int = 0
 
-  def init(peerId: PeerId, keyPair: MSEKeyPair): ClientSession = {
-    clients.computeIfAbsent(peerId, new Function[PeerId, ClientSession] {
-      def apply(p: PeerId): ClientSession = new ClientSession(peerId, keyPair) //TODO
-    })
+  def init(peerId: PeerId, keyPair: MSEKeyPair): ClientSession = {//not used
+    clients.put(peerId, new ClientSession(peerId, keyPair))
   }
   //announce peers
 

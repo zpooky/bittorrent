@@ -14,11 +14,15 @@ import com.spooky.cipher.MSEKeyPair
 import com.spooky.cipher.WriteCipher
 import com.spooky.cipher.ReadCipher
 import spooky.actor.Terminated
+import java.nio.ByteBuffer
+import spooky.util.ByteString
 
 class MessageParserControl(connection: ActorRef, actor: Actor)(keyPair: MSEKeyPair)(implicit context: ActorContext) {
   private val readCipher = keyPair.readCipher
   private val log = Logging(context.system, actor)
   private var handler: ActorRef = null //TODO construct
+
+  private var rest: ByteBuffer = null
 
   private implicit val self = actor.self
 
@@ -48,13 +52,29 @@ class MessageParserControl(connection: ActorRef, actor: Actor)(keyPair: MSEKeyPa
   }
 
   private def trafic: PartialFunction[Any, Unit] = {
-    case Received(data) => {
+    case Received(encoded) => {
+        def decode(encoded: ByteString): ByteBuffer = {
+          val decoded = readCipher.updateBB(encoded)
+          if (rest != null) {
+            val result = ByteBuffer.allocate(rest.remaining() + decoded.remaining())
+            result.put(rest)
+            result.put(decoded)
+            rest = null
+            result
+          } else decoded
+        }
+//      val data = decode(encoded)
       for {
-        received <- PeerWireMessage.parse(readCipher.update(data))
+//        received <- PeerWireMessage.parse(data)
+                received <- PeerWireMessage.parse(readCipher.update(encoded))
       } yield {
         log.debug(s"received: ${received}")
         handler ! received
       }
+//      if (data.hasRemaining()) {
+//        rest = ByteBuffer.allocate(data.remaining())
+//        rest.put(data)
+//      }
     }
   }
 }

@@ -85,7 +85,10 @@ class BufferingRetryActor(connection: ActorRef, session: ClientSession) extends 
     //    }
   }
   //  protected def data: PartialFunction[Any, Unit]
-  implicit private def write(message: Showable): Unit = write(writeCipher.update(message.toByteBuffer), Ack(getSequence, Thing(message)))
+  implicit private def write(message: Showable): Unit = {
+//    println(s"msg: $message| raw:" + message.toByteBuffer.remaining())
+    write(writeCipher.update(message.toByteBuffer), Ack(getSequence, Thing(message)))
+  }
   private def write(message: ByteString, ack: Ack): Unit = if (buffering && outstanding > 0) {
     _buffer(message, ack)
   } else {
@@ -106,21 +109,25 @@ class BufferingRetryActor(connection: ActorRef, session: ClientSession) extends 
     result
   }
   private def checkBuffer(): Unit = {
-      @tailrec
-      def rec(toAck: Long): Long = buffer.remove(toAck) match {
-        case Some(t) => {
-          write(t._1, t._2)
-          rec(toAck + 1)
+      def rec(toAck: Long): Unit = {
+        val ts = new java.util.TreeSet[Long]
+        for (id <- buffer.keySet) {
+          if (id <= toAck) {
+            ts.add(id)
+          }
         }
-        case None => {
-          if (acked.remove(toAck)) {
-            rec(toAck + 1)
-          } else toAck
+        for (id <- ts) {
+          val v = buffer.remove(id)
+          if (v.isDefined) {
+            val va = v.get
+            write(va._1, va._2)
+          }
         }
+
       }
     if (outstanding == 0 || buffer.size >= 15) {
       buffering = false
-      lastAckSequence = rec(lastAckSequence)
+      rec(lastAckSequence)
       if (!buffer.isEmpty) {
         buffering = true
         //        println(s"buffering: $buffering")

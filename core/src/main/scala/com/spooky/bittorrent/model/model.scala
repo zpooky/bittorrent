@@ -42,6 +42,8 @@ case class TorrentStatistics(infoHash: InfoHash, uploaded: Long, downloaded: Lon
 case class TorrentConfiguration(port: Short, numwant: Int)
 abstract class AbstractPeer(ip: String, port: Short)
 case class Peer(ip: String, port: Short) extends AbstractPeer(ip, port)
+
+//rename to something maybe **Context
 case class TorrentRef(info: InfoHash, peerId: PeerId)
 object TorrentRef {
   def apply(torrent: Torrent, peerId: PeerId): TorrentRef = TorrentRef(torrent.infoHash, peerId)

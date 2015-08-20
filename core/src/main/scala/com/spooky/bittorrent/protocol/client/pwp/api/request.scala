@@ -75,6 +75,7 @@ object PeerWireMessage {
   def parse(bs: ByteString): List[PeerWireMessage] = parse(bs.toByteBuffer) //TODO
   def parse(buffer: ByteBuffer): List[PeerWireMessage] = {
     if (buffer.hasRemaining()) {
+      buffer.mark()
       apply(buffer) match {
         case Some(e) => e :: parse(buffer)
         case None    => Nil
@@ -86,26 +87,33 @@ object PeerWireMessage {
     if (!buffer.hasRemaining()) {
       None
     } else {
-      val dup = buffer.duplicate.get & 0xFF
-      val length = buffer.getInt
-        //      println("length::::::" + length + "|" + dup)
-        implicit def toOption[T](any: T): Option[T] = Option(any)
-      if (length == 0) {
-        KeepAlive
-      } else {
-        val messageId = buffer.get & 0xFF
-        messageId match {
-          case 0 => Choke
-          case 1 => Unchoke
-          case 2 => Intrested
-          case 3 => NotIntrested
-          case 4 => Have.parse(buffer)
-          case 5 => Bitfield.parse(length - 1, buffer)
-          case 6 => Request.parse(buffer)
-          case 7 => Piece.parse(length - 1, buffer)
-          case 8 => Cancel.parse(buffer)
-          case 9 => Port.parse(buffer)
-          case n => throw new RuntimeException(s"Unknown message id: $n")
+      try {
+        val length = buffer.getInt
+          //      println("length::::::" + length + "|" + dup)
+          implicit def toOption[T](any: T): Option[T] = Option(any)
+        if (length == 0) {
+          KeepAlive
+        } else {
+          val messageId = buffer.get & 0xFF
+          messageId match {
+            case 0 => Choke
+            case 1 => Unchoke
+            case 2 => Intrested
+            case 3 => NotIntrested
+            case 4 => Have.parse(buffer)
+            case 5 => Bitfield.parse(length - 1, buffer)
+            case 6 => Request.parse(buffer)
+            case 7 => Piece.parse(length - 1, buffer)
+            case 8 => Cancel.parse(buffer)
+            case 9 => Port.parse(buffer)
+            case n => throw new RuntimeException(s"Unknown message id: $n")
+          }
+        }
+      } catch {
+        case e: BufferUnderflowException => {
+          e.printStackTrace()
+          buffer.reset()
+          None
         }
       }
     }

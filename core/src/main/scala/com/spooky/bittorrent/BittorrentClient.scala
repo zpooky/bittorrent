@@ -25,8 +25,11 @@ object BittorrentClient {
     //    val setup = debian()
     //    		val setup = random()
     val api = BittorrentAPI
+    println("-------")
     api.start(debian())
+    println("-------")
     api.start(random())
+    println("-------")
 
     println(ManagementFactory.getRuntimeMXBean().getName())
     //ref = Client.start(torrent)
