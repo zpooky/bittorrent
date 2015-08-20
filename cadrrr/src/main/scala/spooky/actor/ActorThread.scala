@@ -31,6 +31,7 @@ private class ActorThread(private val actorFactory: ActorFactory, private val qu
     } finally {
       terminate(deathPact)
       ActorContext.setSelf(null)
+      println(s"terminate: ${actor.getClass.getSimpleName}")
     }
   }
 

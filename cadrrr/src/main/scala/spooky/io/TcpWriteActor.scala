@@ -21,6 +21,9 @@ private[io] class TcpWriteActor(private val channel: SocketChannel, actors: Conc
 
   }
   private def traffic(): PartialFunction[Any, Unit] = {
+//    case Tcp.Close => {
+//      sender() ! Tcp.Closed
+//    }
     case Tcp.Write(data, Tcp.NoAck) => {
       write(data.toByteBuffer)
     }

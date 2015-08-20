@@ -7,6 +7,9 @@ import java.util.concurrent.CopyOnWriteArraySet
 import scala.annotation.tailrec
 import java.util.Arrays
 import java.util.concurrent.CopyOnWriteArrayList
+import spooky.scheduler.Scheduler
+import spooky.scheduler.Scheduler
+import java.util.concurrent.ThreadFactory
 
 object ActorSystem {
   private[actor] val singleton = new ActorSystem
@@ -17,11 +20,11 @@ class ActorSystem {
 
   def actorOf(props: Props): ActorRef = {
     //    println(s"new: ${props.c.getSimpleName}")
-    Test.t
+    //    Test.t
     val actorFactory = new ActorFactory(props)
 
     val queue = new LinkedBlockingQueue[Tuple2[ActorRef, Any]]
-    Test.list.add((props.c.getSimpleName, queue))
+    //    Test.list.add((props.c.getSimpleName, queue))
     val deathPact = new CopyOnWriteArraySet[ActorRef]
 
     val actorRef = new ActorRef(queue, deathPact)
@@ -29,6 +32,9 @@ class ActorSystem {
     executors.submit(new ActorThread(actorFactory, queue, deathPact, actorRef))
     actorRef
   }
+
+  val scheduler: Scheduler = new Scheduler(Executors.newScheduledThreadPool(2))
+
 }
 object Test {
   val list = new CopyOnWriteArrayList[Tuple2[String, LinkedBlockingQueue[Tuple2[ActorRef, Any]]]]
@@ -40,9 +46,9 @@ object Test {
         var b = false
         for (c <- list) {
           if (!c._2.isEmpty()) {
-            if(!b){
+            if (!b) {
               println("-------")
-              b= true
+              b = true
             }
             println(s"${c._1}: ${c._2.size()}")
           }
