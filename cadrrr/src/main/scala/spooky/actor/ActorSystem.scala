@@ -27,7 +27,7 @@ class ActorSystem {
     //    Test.list.add((props.c.getSimpleName, queue))
     val deathPact = new CopyOnWriteArraySet[ActorRef]
 
-    val actorRef = new ActorRef(queue, deathPact)
+    val actorRef = new ActorRef(props.c, queue, deathPact)
 
     executors.submit(new ActorThread(actorFactory, queue, deathPact, actorRef))
     actorRef

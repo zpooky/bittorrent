@@ -9,5 +9,5 @@ import com.spooky.bittorrent.BTActors
 
 trait PeerWireProtocolsActors {
   this: BTActors =>
-  val api: ActorRef = register(_.actorOf(Props(classOf[TCPServer], PeerWireProtocolMessageDeserializerActor)))
+//  val api: ActorRef = register(_.actorOf(Props(classOf[TCPServer], PeerWireProtocolMessageDeserializerActor.props(sessions))))
 }

@@ -17,28 +17,27 @@ import org.apache.commons.codec.net.URLCodec
 import java.net.URL
 import java.nio.charset.Charset
 import java.util.Base64
-
 import dispatch._, Defaults._
+import com.spooky.bittorrent.l.session.Session
 
-class TrackerManager(tracker: Tracker)( /*implicit context: ExecutionContext, actorSystem: ActorSystem,*/ actors: BittorrentActors) {
+class TrackerManager(session: Session)(tracker: Tracker) /*implicit context: ExecutionContext, actorSystem: ActorSystem,*/ {
   protected val UTF8 = Charset.forName("UTF8")
-  def announce(statistics: TorrentStatistics)(implicit id: PeerId) {
+  def announce(statistics: TorrentStatistics, id: PeerId) {
     //    val requestTimeout = Timeout(1 millisecond)
     //    val pipeline = announcePipeline
-    actors.announce ! Announcing(tracker)
+    session.announce ! Announcing(tracker)
     val config = TorrentConfiguration(2555, 200)
-    println(urlx(tracker.announce, config, statistics, id))
+//    println(urlx(tracker.announce, config, statistics, id))
     val request = urlx(tracker.announce, config, statistics, id)
     val result = Http(request OK as.Bytes)
     //    val result = pipeline(Get(url(tracker.announce, config, statistics, id)))
     result.onSuccess({
       case (data: Array[Byte]) => {
         val b = Bencode.decode(data)
-        println(b)
         Announced(b) match {
-          case r: SuccessAnnounced => actors.announce ! r.copy(tracker = Some(tracker))
-          case r: FailureAnnounced => actors.announce ! r.copy(tracker = Some(tracker))
-          case e => println(s"unknown: $e")
+          case r: SuccessAnnounced => session.announce ! r.copy(tracker = Some(tracker))
+          case r: FailureAnnounced => session.announce ! r.copy(tracker = Some(tracker))
+          case e                   => println(s"unknown: $e")
         }
       }
     })
@@ -56,16 +55,8 @@ class TrackerManager(tracker: Tracker)( /*implicit context: ExecutionContext, ac
     val infoHash = new String(codec.encode(statistics.infoHash.raw), ascii)
     val peerId = id.id
     val key = "ss"
-    val port = 6881
-//    val builder = StringBuilder.newBuilder
-//    builder ++= base
-//    builder ++= s"info_hash=${infoHash}&peer_id=${peerId}&no_peer_id=0&event=started&port=${Config.peerWireProtocolPort}&"
-//    builder ++= s"uploaded=${statistics.uploaded}&downloaded=${statistics.downloaded}&left=${statistics.left}&"
-//    builder ++= s"corrupt=${statistics.corrupt}&key=${key}&numwant=${configuration.numwant}&compact=1"
-//    println(builder)
 
-    url(base) //
-      .addQueryParameter("info_hash", infoHash) //
+    url(s"$base?info_hash=$infoHash") //
       .addQueryParameter("peer_id", peerId) //
       .addQueryParameter("no_peer_id", "0") //
       .addQueryParameter("event", "started") //

@@ -83,6 +83,15 @@ object PeerWireMessage {
     } else Nil
   }
 
+  private def debug(b: ByteBuffer): String = {
+    val buffer = b.duplicate()
+    val sb = StringBuilder.newBuilder
+    while (b.hasRemaining()) {
+      sb.append(b.get.asInstanceOf[Char])
+    }
+    sb.toString()
+  }
+
   def apply(buffer: ByteBuffer): Option[PeerWireMessage] = {
     if (!buffer.hasRemaining()) {
       None
@@ -106,7 +115,7 @@ object PeerWireMessage {
             case 7 => Piece.parse(length - 1, buffer)
             case 8 => Cancel.parse(buffer)
             case 9 => Port.parse(buffer)
-            case n => throw new RuntimeException(s"Unknown message id: $n")
+            case n => throw new RuntimeException(s"Unknown message id: $n| ${debug(buffer)}")
           }
         }
       } catch {

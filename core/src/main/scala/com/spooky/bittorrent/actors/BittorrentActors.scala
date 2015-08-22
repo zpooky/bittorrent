@@ -6,12 +6,17 @@ import spooky.actor.Props
 import com.spooky.bittorrent.protocol.client.pwp.actor.PeerWireProtocolsActors
 import com.spooky.bittorrent.BTActors
 import com.spooky.dht.DHTActors
+import com.spooky.bittorrent.l.session.Sessions
+import com.spooky.bittorrent.protocol.client.pwp.tcp.TCPServer
+import com.spooky.bittorrent.protocol.client.pwp.actor.PeerWireProtocolMessageDeserializerActor
 
 class BittorrentActors(val actorSystem: ActorSystem) extends BTActors with PeerWireProtocolsActors with DHTActors {
-  def announce: ActorRef = actorSystem.actorOf(Props(classOf[AnnounceActor]))
+  val sessions: Sessions = new Sessions(actorSystem)
 
-  def start: ActorRef = actorSystem.actorOf(Props(classOf[TorrentStartActor]))
+  lazy val start: ActorRef = actorSystem.actorOf(TorrentStartActor.props(this, sessions))
 
   def register(actor: ActorSystem => ActorRef): ActorRef = actor(actorSystem)
+
+  val api: ActorRef = actorSystem.actorOf(Props(classOf[TCPServer], PeerWireProtocolMessageDeserializerActor.props(sessions)))
 }
 

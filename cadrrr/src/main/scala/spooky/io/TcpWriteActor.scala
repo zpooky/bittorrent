@@ -15,7 +15,8 @@ private[io] class TcpWriteActor(private val channel: SocketChannel, actors: Conc
 
   def receive: PartialFunction[Any, Unit] = {
     case Tcp.Register(messageActor, address, _, _) => {
-      actors.put(address, (messageActor, self))
+      val previous = actors.put(address, (messageActor, self))
+      assert(previous == null)
       context.become(traffic())
     }
 

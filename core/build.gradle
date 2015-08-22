@@ -22,7 +22,7 @@ dependencies {
 	compile 'net.databinder.dispatch:dispatch-core_2.11:0.11.3'
 
 	//logging
-	compile 'ch.qos.logback:logback-classic:1.1.2'
+//	compile 'ch.qos.logback:logback-classic:1.1.2'
 //	compile 'com.typesafe.akka:akka-slf4j_2.11:2.3.9'
 
 	//encryption
@@ -65,7 +65,7 @@ task fatCapsule(type: FatCapsule) {
 		jvmArgs = [
 			//gc
 			"-verbose:gc",
-			"-Xloggc:vm.log",
+			"-Xloggc:log/vm.log",
 			//profile
 			"-XX:+UnlockCommercialFeatures",
 			"-XX:+FlightRecorder",
@@ -77,7 +77,7 @@ task fatCapsule(type: FatCapsule) {
 			"-Djava.rmi.server.hostname=localhost",
 			//crash log
 			"-XX:+HeapDumpOnOutOfMemoryError",
-			"-XX:HeapDumpPath=outofmemory.log",
+			"-XX:HeapDumpPath=log/outofmemory.log",
 			"-XX:-PrintConcurrentLocks",
 			//memory
 			"-Xmx256m",

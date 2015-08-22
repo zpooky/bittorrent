@@ -16,6 +16,8 @@ import spooky.io.TcpThread._
 import spooky.actor.ActorContext
 import spooky.actor.ActorSystem
 import java.io.IOException
+import java.net.SocketOption
+import java.net.StandardSocketOptions
 
 object TcpThread {
   type MessageActorRef = ActorRef
@@ -83,6 +85,7 @@ private[io] class TcpThread(serverChannel: ServerSocketChannel, mainTcpActor: Ac
   private def accept(sc: ServerSocketChannel, selector: Selector): Unit = {
     val client = sc.accept()
     if (client != null) {
+//      client.setOption(StandardSocketOptions.TCP_NODELAY, Boolean.box(false))
       client.configureBlocking(false)
       client.register(selector, SelectionKey.OP_READ, SelectionKey.OP_WRITE)
 

@@ -13,7 +13,7 @@ import com.spooky.inbound.step.InboundStep
 import com.spooky.inbound.Reply
 import spooky.util.ByteString
 import com.spooky.inbound.step.DoneStep
-import com.spooky.bittorrent.l.session.SessionManager
+import com.spooky.bittorrent.l.session.Sessions
 import spooky.io.Tcp.Write
 import com.spooky.cipher.ReadPlain
 import com.spooky.cipher.WritePlain
@@ -24,11 +24,16 @@ import spooky.io.Tcp
 
 //pstrlen:19|pstr:BitTorrent protocol|reserved:0000000000000000000000000000000000000000000100000000000000000000|info_has:Yj!ﾊXﾰ￾xﾀﾺFlￍﾉￊlwﾏ|peer-id:-lt0D20-Pﾖ￷ﾒﾛﾜￋ￿s
 
-object PeerWireProtocolMessageDeserializerActor extends HandlerProps {
-  def props(client: Tcp.Address, connection: ActorRef) = Props(classOf[PeerWireProtocolMessageDeserializerActor], client, connection)
+object PeerWireProtocolMessageDeserializerActor {
+
+  def props(sessions: Sessions): HandlerProps = new HandlerProps {
+    def props(client: Tcp.Address, connection: ActorRef): Props = PeerWireProtocolMessageDeserializerActor.propsx(sessions)(client, connection)
+  }
+
+  private def propsx(sessions: Sessions)(client: Tcp.Address, connection: ActorRef) = Props(classOf[PeerWireProtocolMessageDeserializerActor], client, connection, sessions)
 }
 
-class PeerWireProtocolMessageDeserializerActor(client: Tcp.Address, connection: ActorRef) extends Actor {
+class PeerWireProtocolMessageDeserializerActor(client: Tcp.Address, connection: ActorRef, sessions: Sessions) extends Actor {
   private val log = Logging(context.system, this)
   private var handler: ActorRef = null
 
@@ -44,17 +49,17 @@ class PeerWireProtocolMessageDeserializerActor(client: Tcp.Address, connection: 
       //      val cpy = buffer.duplicate
       //      println(client.getHostString + "|" + first)
       if (step == null && data.head == 19 && data.length == 68) {
-        val msg = new MessageParserControl(connection, this)(MSEKeyPair(WritePlain, ReadPlain))
+        val msg = new MessageParserControl(connection, this)(MSEKeyPair(WritePlain, ReadPlain), sessions)
         msg.receive(request)
       } else {
         step = if (step == null) {
-          new InboundStep(SessionManager.infoHashes)
+          new InboundStep(sessions.infoHashes)
         } else step
         step = step.step(data).step(exchange)
         step match {
           case d: DoneStep => {
             step = null
-            val msg = new MessageParserControl(connection, this)(d.keyPair)
+            val msg = new MessageParserControl(connection, this)(d.keyPair, sessions)
             if (d.data.isDefined) {
               msg.receive(Handshake.parse(d.data.get))
             } else {
